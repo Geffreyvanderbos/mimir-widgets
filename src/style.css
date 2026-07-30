@@ -27,6 +27,7 @@
 html, body {
   margin: 0;
   padding: 0;
+  height: 100%;
 }
 
 body {
@@ -37,17 +38,23 @@ body {
   -webkit-font-smoothing: antialiased;
   color: var(--ink);
   background: var(--bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.widget-card {
+/*
+ * No border, radius, or outer background here on purpose: the consumer
+ * (e.g. Mimir's .embed-panel) already draws its own rounded/hairline-
+ * bordered container around this iframe. Adding a second one here doubles
+ * up visually. This fills the frame exactly (via body's flex centering)
+ * instead of sitting top-left with slack space below it.
+ */
+.widget-content {
   box-sizing: border-box;
   width: 100%;
-  border: 1px solid var(--hairline);
-  border-radius: 12px;
-  background: var(--bg-raised);
   color: var(--ink);
-  padding: 1rem 1.25rem;
-  overflow: hidden;
+  padding: 0 1.25rem;
 }
 
 .widget-label {
@@ -81,7 +88,7 @@ body {
   border: 1px solid var(--hairline);
 }
 
-.countdown-card {
+.countdown-content {
   text-align: center;
 }
 
@@ -92,7 +99,7 @@ body {
   letter-spacing: 0.02em;
 }
 
-.pomodoro-card {
+.pomodoro-content {
   text-align: center;
 }
 
