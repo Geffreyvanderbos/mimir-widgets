@@ -11,6 +11,7 @@ export default defineConfig({
         pomodoro: entry('./pomodoro/index.html'),
         weather: entry('./weather/index.html'),
         calc: entry('./calc/index.html'),
+        dummy: entry('./dummy/index.html'),
       },
     },
   },

@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dummy Outline — Mimir Widgets</title>
+  <link rel="stylesheet" href="/src/style.css" />
+</head>
+<body>
+  <div class="dummy-content">
+    <div class="dummy-controls">
+      <label class="dummy-field">
+        Blocks
+        <input id="dummy-count" type="number" min="1" max="200" step="1" />
+      </label>
+      <label class="dummy-field">
+        Depth
+        <select id="dummy-depth">
+          <option value="0">Flat</option>
+          <option value="1">1</option>
+          <option value="2">2</option>
+          <option value="3">3</option>
+          <option value="4">4</option>
+          <option value="5">5</option>
+        </select>
+      </label>
+      <button id="dummy-shuffle" class="widget-button secondary" type="button">Shuffle</button>
+      <button id="dummy-copy" class="widget-button" type="button">Copy</button>
+    </div>
+    <textarea
+      id="dummy-output"
+      class="dummy-output"
+      readonly
+      spellcheck="false"
+      autocomplete="off"
+    ></textarea>
+  </div>
+  <script type="module" src="/src/dummy.ts"></script>
+</body>
+</html>

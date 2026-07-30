@@ -1,7 +1,8 @@
 # Mimir Widgets
 
 Small oEmbed-enabled widgets (a countdown timer, a Pomodoro timer, a
-next-day weather forecast, a plaintext calculator) built to embed cleanly
+next-day weather forecast, a plaintext calculator, a dummy-outline
+generator) built to embed cleanly
 into Mimir — paste a bare widget URL into a block and it renders as a live
 card instead of a plain link.
 

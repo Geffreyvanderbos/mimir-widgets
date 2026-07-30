@@ -4,11 +4,20 @@
 // Mimir's Rust side reads the *iframe tag's* dimensions as authoritative
 // (a literal height alongside a non-pixel width means "any width, this
 // tall") — the same shape Spotify's own oEmbed response uses.
-const WIDGET_HEIGHTS: Record<string, number> = {
-  '/countdown': 140,
-  '/pomodoro': 280,
-  '/weather': 180,
-  '/calc': 200,
+interface Widget {
+  height: number;
+  title: (target: URL) => string;
+}
+
+const WIDGETS: Record<string, Widget> = {
+  '/countdown': {
+    height: 140,
+    title: (target) => `Countdown: ${target.searchParams.get('label') ?? 'Countdown'}`,
+  },
+  '/pomodoro': { height: 280, title: () => 'Pomodoro Timer' },
+  '/weather': { height: 180, title: () => 'Weather Forecast' },
+  '/calc': { height: 200, title: () => 'Calculator' },
+  '/dummy': { height: 300, title: () => 'Dummy Outline Generator' },
 };
 
 function escapeAttr(value: string): string {
@@ -36,19 +45,13 @@ export const onRequest: PagesFunction = async (context) => {
   }
 
   const targetPath = target.pathname.replace(/\/$/, '');
-  const height = WIDGET_HEIGHTS[targetPath];
-  if (height === undefined) {
+  const widget = WIDGETS[targetPath];
+  if (widget === undefined) {
     return new Response('Unknown widget path', { status: 404 });
   }
 
-  const title =
-    targetPath === '/countdown'
-      ? `Countdown: ${target.searchParams.get('label') ?? 'Countdown'}`
-      : targetPath === '/pomodoro'
-        ? 'Pomodoro Timer'
-        : targetPath === '/weather'
-          ? 'Weather Forecast'
-          : 'Calculator';
+  const { height } = widget;
+  const title = widget.title(target);
 
   const iframeSrc = escapeAttr(target.toString());
   const body = {
