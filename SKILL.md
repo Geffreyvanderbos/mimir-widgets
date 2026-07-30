@@ -95,7 +95,7 @@ always match what Mimir is actually rendering — implement that, and you're
 correctly themed with zero coordination needed. See `src/style.css` in
 this repo for a full light/dark token set matching Mimir's own colors.
 
-## 6. Visual tokens, for widgets that want to look native
+## 6. Visual tokens — and don't draw your own card chrome
 
 Not required, but recommended so an embedded widget doesn't look like a
 foreign object dropped into someone's notes:
@@ -106,13 +106,29 @@ foreign object dropped into someone's notes:
 | Accent | `#006fdc` | `#409cff` |
 | Background | `#fdfdfe` | `#1a1a1c` |
 | Ink (text) | `#1B1B1B` | `#dcdcde` (deliberately capped below pure white — see note below) |
-| Hairline border | `hsla(0,0%,0%,0.12)` | `hsla(0,0%,100%,0.11)` |
-| Border radius | `12px` (matches the rounding of the panel your iframe sits inside) | same |
 
 Dark-mode text intentionally stops short of pure white — Mimir caps it
 around 87% (per NN/g's dark-mode-halation research and Material Design's
 dark-theme guidance) rather than using `#fff`, which reads as harsh/glowing
 on a dark background. Worth carrying over if your widget shows body text.
+
+**Do not give your widget its own outer border, border-radius, drop shadow,
+or card background.** Mimir's `.embed-panel` already draws a rounded,
+hairline-bordered container around your iframe — adding a second one inside
+produces a visibly nested "rectangle within a rectangle" look (confirmed by
+actually embedding a first draft of these widgets: see the FAQ below). Treat
+the iframe's edge as the card's edge; your page should render flush to it,
+with only internal text padding, not an outer bordered box.
+
+**Fill the frame exactly — don't let content sit top-aligned with slack
+space below it.** Since you're reporting a fixed height (§4), your page's
+actual rendered content should occupy that full height, not float at the
+top with empty background underneath. The simplest way: make `body` a flex
+container (`display: flex; align-items: center; justify-content: center;`
+on `html, body { height: 100% }`) so your content is vertically centered
+and the whole frame reads as one intentional shape, not a card floating in
+a taller empty box. See `src/style.css` and `src/countdown.ts`/`pomodoro.ts`
+in this repo — plain `.widget-content` divs, no card wrapper.
 
 ## 7. Etiquette, since your widget runs inside someone's sandboxed notes app
 
@@ -156,3 +172,21 @@ in this repo for the working example. Other static hosts have an
 equivalent per-path header override; the fix is the same regardless of
 host — a widget page must not send a restrictive `X-Frame-Options` (or a
 `Content-Security-Policy: frame-ancestors` that excludes the consumer).
+
+**I removed it from Pages and it's still blocked.** If your widget domain
+sits on a Cloudflare zone (not just a `*.pages.dev` subdomain), check
+**Rules → Transform Rules → Managed Transforms** for a bundled toggle like
+"Add security headers" — it's a separate, zone-wide feature from anything
+Pages itself sends, and it also injects `X-Frame-Options: SAMEORIGIN` (plus
+`X-Content-Type-Options`, `Referrer-Policy`, etc.), with no per-host
+exception on that settings page. Fix it with a **Response Header**
+Transform Rule (not a Request Header one — those look similar in the UI but
+only touch what Cloudflare sends to your origin, not what it sends back to
+the browser, and won't do anything here): match `http.host eq
+"your-widget-host"`, action **Remove** → `X-Frame-Options`. A regular
+Transform Rule can strip a header a Managed Transform already added.
+
+**My widget shows a visibly nested rectangle-in-a-rectangle, with extra
+blank space below the card.** You gave your widget its own border/
+border-radius/card background, doubling up on Mimir's `.embed-panel`
+chrome, and/or your content doesn't fill the full declared height. See §6.
