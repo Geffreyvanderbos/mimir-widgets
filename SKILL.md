@@ -177,6 +177,10 @@ never load again to prune itself.
   `?label=`, ticks a live countdown client-side. Fixed 140px height.
 - `pomodoro/index.html` + `src/pomodoro.ts` — reads `?work=` and `?rest=`
   (minutes), a start/pause timer cycling work/rest. Fixed 280px height.
+  Persists its running state to namespaced `localStorage` (§7) so it
+  resumes at the correct remaining time — fast-forwarding through any
+  work/rest cycles that elapsed — after the iframe is destroyed and
+  recreated by navigating away and back.
 - `weather/index.html` + `src/weather.ts` — reads `?lat=`, `?lon=`, and
   `?label=`, fetches the coming hours' forecast (temperature, precipitation
   chance, weather-code icon) at 3-hour steps client-side from the
