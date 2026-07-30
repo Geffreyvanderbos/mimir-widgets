@@ -131,3 +131,28 @@ on a dark background. Worth carrying over if your widget shows body text.
   (minutes), a start/pause timer cycling work/rest. Fixed 280px height.
 - `functions/api/oembed.ts` — the oEmbed JSON endpoint both widgets share.
 - `functions/_middleware.ts` — the discovery-`<link>` injection.
+
+## FAQ / gotchas
+
+**My widget loads fine in a browser tab but shows a blank frame in Mimir,
+with a console error like `Refused to display '...' in a frame because it
+set 'X-Frame-Options' to 'SAMEORIGIN'`.** If you're on Cloudflare Pages:
+Pages sets `X-Frame-Options: SAMEORIGIN` on every response by default,
+which blocks exactly the cross-origin framing an embeddable widget needs.
+Remove it on your widget routes with a `_headers` file in your build
+output (or `public/`, if using Vite):
+
+```
+/your-widget-path
+  ! X-Frame-Options
+/your-widget-path/*
+  ! X-Frame-Options
+```
+
+Leave it in place on any page you don't intend to be embedded (a landing
+page, for instance) — the default is a reasonable one, it's just wrong for
+the specific routes a consumer is meant to iframe. See `public/_headers`
+in this repo for the working example. Other static hosts have an
+equivalent per-path header override; the fix is the same regardless of
+host — a widget page must not send a restrictive `X-Frame-Options` (or a
+`Content-Security-Policy: frame-ancestors` that excludes the consumer).

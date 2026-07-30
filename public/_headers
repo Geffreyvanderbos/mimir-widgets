@@ -1,0 +1,12 @@
+# Cloudflare Pages defaults every response to X-Frame-Options: SAMEORIGIN,
+# which blocks the whole point of this site — being loaded cross-origin as
+# an iframe. Remove it only on the widget routes; the landing page has no
+# reason to be embeddable and can keep the default clickjacking protection.
+/countdown
+  ! X-Frame-Options
+/countdown/*
+  ! X-Frame-Options
+/pomodoro
+  ! X-Frame-Options
+/pomodoro/*
+  ! X-Frame-Options

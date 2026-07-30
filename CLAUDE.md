@@ -52,6 +52,17 @@ autosize here — that channel only exists for embeds Mimir renders via
 instead (see SKILL.md §3-4), so a widget's height is fixed once and for
 all rather than dynamic.
 
+**`public/_headers` strips `X-Frame-Options` on the widget routes.** Cloudflare
+Pages sets `X-Frame-Options: SAMEORIGIN` on every response by default — found
+the hard way, on the very first real embed attempt in Mimir, as a blank frame
+plus a browser console error. That header exists to *prevent* cross-origin
+framing, which is the entire point of a widget, so it has to be explicitly
+removed (Cloudflare's `_headers` syntax: `! Header-Name`) on `/countdown` and
+`/pomodoro` — deliberately left in place everywhere else (the landing page has
+no reason to be embedded). See the FAQ in `SKILL.md` for the third-party-
+facing version of this gotcha, since it'll bite any widget host, not just
+Cloudflare Pages.
+
 ## Conventions
 
 - No comments except where they explain non-obvious *why* — never restate
