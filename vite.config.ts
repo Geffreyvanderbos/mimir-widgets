@@ -9,6 +9,7 @@ export default defineConfig({
         main: entry('./index.html'),
         countdown: entry('./countdown/index.html'),
         pomodoro: entry('./pomodoro/index.html'),
+        weather: entry('./weather/index.html'),
       },
     },
   },

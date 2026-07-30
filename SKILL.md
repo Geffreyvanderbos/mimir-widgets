@@ -145,6 +145,12 @@ in this repo — plain `.widget-content` divs, no card wrapper.
   `?label=`, ticks a live countdown client-side. Fixed 140px height.
 - `pomodoro/index.html` + `src/pomodoro.ts` — reads `?work=` and `?rest=`
   (minutes), a start/pause timer cycling work/rest. Fixed 280px height.
+- `weather/index.html` + `src/weather.ts` — reads `?lat=`, `?lon=`, and
+  `?label=`, fetches the coming hours' forecast (temperature, precipitation
+  chance, weather-code icon) at 3-hour steps client-side from the
+  [Open-Meteo](https://open-meteo.com/) API (no key required), showing as
+  many columns as comfortably fit the embed's actual width. Fixed 180px
+  height.
 - `functions/api/oembed.ts` — the oEmbed JSON endpoint both widgets share.
 - `functions/_middleware.ts` — the discovery-`<link>` injection.
 
