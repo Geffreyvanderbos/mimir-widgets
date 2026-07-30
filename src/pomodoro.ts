@@ -19,6 +19,57 @@ function phaseDurationMs(p: Phase): number {
   return (p === 'work' ? workMinutes : restMinutes) * 60 * 1000;
 }
 
+// Browsers only allow audio to start from a real user gesture, so the
+// AudioContext is created lazily on the toggle click rather than up front —
+// if the timer auto-resumes from storage without a fresh click this load,
+// there's no context yet and beep() below just no-ops instead of erroring.
+let audioCtx: AudioContext | null = null;
+
+function unlockAudio() {
+  if (audioCtx) return;
+  const Ctor =
+    window.AudioContext ??
+    (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+  if (Ctor) audioCtx = new Ctor();
+}
+
+// A bell-like note: a fundamental plus a quieter inharmonic partial (a
+// non-integer multiple, as real bells have) so it reads as a "chime" rather
+// than a flat sine beep, with a slow decay instead of a quick blip.
+function playChimeNote(ctx: AudioContext, startAt: number) {
+  const gain = ctx.createGain();
+  gain.gain.setValueAtTime(0.0001, startAt);
+  gain.gain.exponentialRampToValueAtTime(0.7, startAt + 0.015);
+  gain.gain.exponentialRampToValueAtTime(0.0001, startAt + 1.1);
+  gain.connect(ctx.destination);
+
+  const fundamental = ctx.createOscillator();
+  fundamental.type = 'sine';
+  fundamental.frequency.value = 880;
+  fundamental.connect(gain);
+
+  const partialGain = ctx.createGain();
+  partialGain.gain.value = 0.4;
+  const partial = ctx.createOscillator();
+  partial.type = 'sine';
+  partial.frequency.value = 880 * 2.4;
+  partial.connect(partialGain).connect(gain);
+
+  fundamental.start(startAt);
+  partial.start(startAt);
+  fundamental.stop(startAt + 1.2);
+  partial.stop(startAt + 1.2);
+}
+
+// A single chime for "work done, rest starts"; two for "rest done, back to
+// work" — matches the two-ping request specifically for that one.
+function chime(times: number) {
+  if (!audioCtx) return;
+  for (let i = 0; i < times; i++) {
+    playChimeNote(audioCtx, audioCtx.currentTime + i * 0.55);
+  }
+}
+
 // Namespaced by the widget's own query string, not just origin — two
 // differently-configured embeds (?work=25 vs ?work=50) must not collide on
 // the same storage key. See SKILL.md §7.
@@ -106,8 +157,10 @@ function tick() {
   lastTick = now;
   remainingMs -= elapsed;
   if (remainingMs <= 0) {
+    const endedPhase = phase;
     phase = phase === 'work' ? 'rest' : 'work';
     remainingMs = phaseDurationMs(phase);
+    chime(endedPhase === 'work' ? 1 : 2);
   }
   render();
   saveState();
@@ -137,7 +190,10 @@ function reset() {
   saveState();
 }
 
-toggleEl.addEventListener('click', () => (running ? pause() : start()));
+toggleEl.addEventListener('click', () => {
+  unlockAudio();
+  running ? pause() : start();
+});
 resetEl.addEventListener('click', reset);
 window.addEventListener('pagehide', saveState);
 
