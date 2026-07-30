@@ -10,3 +10,7 @@
   ! X-Frame-Options
 /pomodoro/*
   ! X-Frame-Options
+/weather
+  ! X-Frame-Options
+/weather/*
+  ! X-Frame-Options

@@ -3,7 +3,7 @@
 // JS. So the tag has to be in the server response, and its href has to
 // encode *this exact request's* URL, which is why this can't be a static
 // build-time <link> baked into the HTML file.
-const WIDGET_PATHS = ['/countdown', '/pomodoro'];
+const WIDGET_PATHS = ['/countdown', '/pomodoro', '/weather'];
 
 export const onRequest: PagesFunction = async (context) => {
   const { request, next } = context;

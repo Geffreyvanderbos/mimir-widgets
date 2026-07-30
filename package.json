@@ -7,12 +7,13 @@
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview",
-    "pages:dev": "wrangler pages dev dist"
+    "pages:dev": "vite build --outDir dist && concurrently -n vite,wrangler -c blue,yellow \"vite build --outDir dist --watch\" \"wrangler pages dev dist --live-reload\""
   },
   "devDependencies": {
+    "@cloudflare/workers-types": "^5.0.0",
+    "concurrently": "^10.0.4",
     "typescript": "^5.5.0",
     "vite": "^6.0.0",
-    "wrangler": "^4.0.0",
-    "@cloudflare/workers-types": "^5.0.0"
+    "wrangler": "^4.0.0"
   }
 }
