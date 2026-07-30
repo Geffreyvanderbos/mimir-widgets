@@ -14,3 +14,7 @@
   ! X-Frame-Options
 /weather/*
   ! X-Frame-Options
+/calc
+  ! X-Frame-Options
+/calc/*
+  ! X-Frame-Options

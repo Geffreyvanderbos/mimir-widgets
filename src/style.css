@@ -168,3 +168,29 @@ body {
   color: var(--ink-muted);
   font-variant-numeric: tabular-nums;
 }
+
+/*
+ * The calculator is the textarea itself, not a centered card — it needs to
+ * fill the frame edge-to-edge (align-self: stretch overrides body's
+ * centering just for this one child) rather than shrink-wrap like the
+ * other widgets' compact content.
+ */
+.calc-content {
+  align-self: stretch;
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
+  margin: 0;
+  border: none;
+  outline: none;
+  resize: none;
+  background: transparent;
+  color: var(--ink);
+  font: inherit;
+  font-variant-numeric: tabular-nums;
+  padding: 0.75rem 1rem;
+}
+
+.calc-content::placeholder {
+  color: var(--ink-faint);
+}

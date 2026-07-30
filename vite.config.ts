@@ -10,6 +10,7 @@ export default defineConfig({
         countdown: entry('./countdown/index.html'),
         pomodoro: entry('./pomodoro/index.html'),
         weather: entry('./weather/index.html'),
+        calc: entry('./calc/index.html'),
       },
     },
   },

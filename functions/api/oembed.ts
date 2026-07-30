@@ -8,6 +8,7 @@ const WIDGET_HEIGHTS: Record<string, number> = {
   '/countdown': 140,
   '/pomodoro': 280,
   '/weather': 180,
+  '/calc': 200,
 };
 
 function escapeAttr(value: string): string {
@@ -45,7 +46,9 @@ export const onRequest: PagesFunction = async (context) => {
       ? `Countdown: ${target.searchParams.get('label') ?? 'Countdown'}`
       : targetPath === '/pomodoro'
         ? 'Pomodoro Timer'
-        : 'Weather Forecast';
+        : targetPath === '/weather'
+          ? 'Weather Forecast'
+          : 'Calculator';
 
   const iframeSrc = escapeAttr(target.toString());
   const body = {
