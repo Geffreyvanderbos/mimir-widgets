@@ -180,7 +180,10 @@ never load again to prune itself.
   Persists its running state to namespaced `localStorage` (§7) so it
   resumes at the correct remaining time — fast-forwarding through any
   work/rest cycles that elapsed — after the iframe is destroyed and
-  recreated by navigating away and back.
+  recreated by navigating away and back. Chimes on each phase change (one
+  tone into rest, two back into work) via a synthesized Web Audio tone —
+  no audio file, and only ever triggered by a live phase transition after
+  the person has clicked Start themselves, never on load.
 - `weather/index.html` + `src/weather.ts` — reads `?lat=`, `?lon=`, and
   `?label=`, fetches the coming hours' forecast (temperature, precipitation
   chance, weather-code icon) at 3-hour steps client-side from the
