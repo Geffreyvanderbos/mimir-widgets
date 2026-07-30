@@ -194,3 +194,79 @@ body {
 .calc-content::placeholder {
   color: var(--ink-faint);
 }
+
+/*
+ * Like the calculator, this one fills the frame rather than shrink-wrapping:
+ * a controls row of fixed height on top, and the generated outline taking
+ * whatever's left. The output scrolls internally instead of growing the
+ * page, since the reported embed height is fixed no matter how many blocks
+ * were asked for (SKILL.md §4).
+ */
+.dummy-content {
+  align-self: stretch;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  padding: 0.75rem 1rem;
+}
+
+.dummy-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.dummy-field {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.8rem;
+  color: var(--ink-muted);
+}
+
+.dummy-field input,
+.dummy-field select {
+  font: inherit;
+  font-size: 0.85rem;
+  color: var(--ink);
+  background: var(--bg-raised);
+  border: 1px solid var(--hairline);
+  border-radius: 6px;
+  padding: 0.25rem 0.35rem;
+}
+
+.dummy-field input {
+  width: 3.75rem;
+}
+
+/* Pushes the two buttons to the trailing edge, away from the fields. */
+.dummy-controls .widget-button {
+  font-size: 0.85rem;
+  padding: 0.3rem 0.7rem;
+}
+
+.dummy-controls .widget-button:first-of-type {
+  margin-left: auto;
+}
+
+.dummy-output {
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+  margin: 0;
+  border: 1px solid var(--hairline);
+  border-radius: 6px;
+  outline: none;
+  resize: none;
+  background: var(--bg-raised);
+  color: var(--ink);
+  font-family: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace;
+  font-size: 0.8rem;
+  line-height: 1.5;
+  padding: 0.5rem 0.6rem;
+  white-space: pre;
+  overflow: auto;
+}

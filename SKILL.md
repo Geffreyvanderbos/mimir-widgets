@@ -190,7 +190,15 @@ never load again to prune itself.
   [Open-Meteo](https://open-meteo.com/) API (no key required), showing as
   many columns as comfortably fit the embed's actual width. Fixed 180px
   height.
-- `functions/api/oembed.ts` — the oEmbed JSON endpoint both widgets share.
+- `dummy/index.html` + `src/dummy.ts` — reads `?blocks=` and `?depth=`,
+  generates a dash-prefixed outline (two spaces per indent level) from a
+  bundled public-domain corpus, with a copy button. Fixed 300px height; the
+  output scrolls internally rather than growing the page, since the reported
+  height can't vary with the block count (§4). Its clipboard write falls
+  back to `document.execCommand('copy')`, then to just selecting the text,
+  since a consumer's `Permissions-Policy` may withhold `clipboard-write`
+  from a cross-origin frame.
+- `functions/api/oembed.ts` — the oEmbed JSON endpoint all widgets share.
 - `functions/_middleware.ts` — the discovery-`<link>` injection.
 
 ## FAQ / gotchas

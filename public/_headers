@@ -18,3 +18,7 @@
   ! X-Frame-Options
 /calc/*
   ! X-Frame-Options
+/dummy
+  ! X-Frame-Options
+/dummy/*
+  ! X-Frame-Options
