@@ -1,0 +1,119 @@
+:root {
+  --bg: #fdfdfe;
+  --bg-raised: #ffffff;
+  --ink: #1B1B1B;
+  --ink-muted: #5D5D5F;
+  --ink-faint: #9E9FA1;
+  --accent: #006fdc;
+  --hairline: hsla(0, 0%, 0%, 0.12);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #1a1a1c;
+    --bg-raised: #242426;
+    --ink: #dcdcde;
+    --ink-muted: #98989d;
+    --ink-faint: #4b4b4f;
+    --accent: #409cff;
+    --hairline: hsla(0, 0%, 100%, 0.11);
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', Roboto,
+    'Helvetica Neue', Arial, sans-serif;
+  font-size: 16px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  color: var(--ink);
+  background: var(--bg);
+}
+
+.widget-card {
+  box-sizing: border-box;
+  width: 100%;
+  border: 1px solid var(--hairline);
+  border-radius: 12px;
+  background: var(--bg-raised);
+  color: var(--ink);
+  padding: 1rem 1.25rem;
+  overflow: hidden;
+}
+
+.widget-label {
+  font-size: 0.85rem;
+  color: var(--ink-muted);
+  margin: 0 0 0.35rem;
+}
+
+.widget-accent {
+  color: var(--accent);
+}
+
+.widget-button {
+  font: inherit;
+  font-weight: 600;
+  color: var(--bg);
+  background: var(--accent);
+  border: none;
+  border-radius: 8px;
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+}
+
+.widget-button:active {
+  opacity: 0.85;
+}
+
+.widget-button.secondary {
+  color: var(--ink);
+  background: transparent;
+  border: 1px solid var(--hairline);
+}
+
+.countdown-card {
+  text-align: center;
+}
+
+.countdown-clock {
+  font-size: 1.75rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.02em;
+}
+
+.pomodoro-card {
+  text-align: center;
+}
+
+.pomodoro-phase {
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--accent);
+  margin: 0 0 0.25rem;
+}
+
+.pomodoro-clock {
+  font-size: 2.5rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  margin: 0.25rem 0 1rem;
+}
+
+.pomodoro-controls {
+  display: flex;
+  justify-content: center;
+  gap: 0.5rem;
+}

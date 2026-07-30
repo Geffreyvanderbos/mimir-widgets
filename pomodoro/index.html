@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Pomodoro — Mimir Widgets</title>
+  <link rel="stylesheet" href="/src/style.css" />
+</head>
+<body>
+  <div id="app" class="widget-card pomodoro-card">
+    <p class="pomodoro-phase" id="pomodoro-phase">Work</p>
+    <div class="pomodoro-clock" id="pomodoro-clock" aria-live="polite"></div>
+    <div class="pomodoro-controls">
+      <button class="widget-button" id="pomodoro-toggle">Start</button>
+      <button class="widget-button secondary" id="pomodoro-reset">Reset</button>
+    </div>
+  </div>
+  <script type="module" src="/src/pomodoro.ts"></script>
+</body>
+</html>

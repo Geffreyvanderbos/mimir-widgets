@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mimir Widgets</title>
+  <link rel="stylesheet" href="/src/style.css" />
+  <style>
+    .page { max-width: 640px; margin: 0 auto; padding: 3rem 1.25rem; }
+    h1 { margin-bottom: 0.25rem; }
+    .lede { color: var(--ink-muted); margin-top: 0; }
+    .widget-list { display: flex; flex-direction: column; gap: 1rem; margin: 2rem 0; }
+    .widget-entry h2 { margin: 0 0 0.5rem; font-size: 1.1rem; }
+    .widget-entry code { background: var(--bg); border: 1px solid var(--hairline); border-radius: 4px; padding: 0.1rem 0.35rem; }
+    a { color: var(--accent); }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <h1>Mimir Widgets</h1>
+    <p class="lede">
+      Small oEmbed-enabled widgets, built to embed cleanly into
+      Mimir — drop a bare widget URL into a block and it renders as a live
+      card, not just a link.
+    </p>
+
+    <div class="widget-list">
+      <div class="widget-entry">
+        <h2>Countdown</h2>
+        <p>
+          <a href="/countdown?date=2027-01-01T00:00:00Z&label=New%20Year">Live example</a>
+          — pass <code>?date=</code> (ISO 8601) and <code>?label=</code>.
+        </p>
+      </div>
+      <div class="widget-entry">
+        <h2>Pomodoro</h2>
+        <p>
+          <a href="/pomodoro?work=25&rest=5">Live example</a>
+          — pass <code>?work=</code> and <code>?rest=</code> in minutes.
+        </p>
+      </div>
+    </div>
+
+    <p>
+      Want to build your own widget that embeds just as well? Read
+      <a href="https://github.com/Geffreyvanderbos/mimir-widgets/blob/main/SKILL.md">SKILL.md</a>
+      — it's written so you can hand it straight to an LLM and get a
+      Mimir-friendly oEmbed widget out the other end.
+    </p>
+  </div>
+</body>
+</html>
