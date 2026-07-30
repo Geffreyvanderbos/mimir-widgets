@@ -130,7 +130,39 @@ and the whole frame reads as one intentional shape, not a card floating in
 a taller empty box. See `src/style.css` and `src/countdown.ts`/`pomodoro.ts`
 in this repo — plain `.widget-content` divs, no card wrapper.
 
-## 7. Etiquette, since your widget runs inside someone's sandboxed notes app
+## 7. Persistent state: localStorage/cookies work, but namespace and expire them yourself
+
+On the direct-iframe path (§3), Mimir grants `allow-same-origin`, so your
+widget gets real, persistent `localStorage`/cookies scoped to your own
+origin — the same as if someone had visited it in a browser tab. This
+survives navigating away from the Mimir page and back, even though the
+iframe itself is destroyed and recreated on every visit (so any *in-memory*
+JS state — a running `setInterval`, a variable — is gone each time). A
+Pomodoro-style widget can resume exactly where it left off by reading its
+remaining time from storage on load instead of always starting fresh.
+
+Two things to get right if you do this:
+
+**Namespace by more than origin.** `localStorage` is scoped per *origin*,
+not per query string. Two instances of the same widget with different
+config (`?work=25&rest=5` vs `?work=50&rest=10`) will collide on the same
+storage keys unless you namespace explicitly — key off the URL's own
+`search` string (or an explicit `?id=` the person embedding it sets), not
+just a fixed key name.
+
+**Expire your own entries — nothing else will.** There's no install/
+uninstall step for a widget and no server to run a cleanup job; a person
+can create an unbounded number of distinctly-configured embeds (a new
+countdown date, a new labeled timer) over time, each leaving its own
+storage key behind forever if nothing prunes it. Store a timestamp
+alongside your state and, on every load, sweep your own namespace: delete
+any key under your prefix whose timestamp is older than some TTL you pick
+(a countdown past its target date, or a Pomodoro untouched for 30+ days,
+are both reasonable "this is stale" signals) — not just check the current
+instance's own key, since a config that's no longer embedded anywhere will
+never load again to prune itself.
+
+## 8. Etiquette, since your widget runs inside someone's sandboxed notes app
 
 - https-only. Mimir refuses to even validate an http target.
 - No autoplaying audio, no unsolicited `window.open`/popups, no
@@ -139,7 +171,7 @@ in this repo — plain `.widget-content` divs, no card wrapper.
 - No external font/CDN requests if avoidable — keeps load fast and sidesteps
   CSP/sandboxing surprises.
 
-## 8. Reference implementations
+## 9. Reference implementations
 
 - `countdown/index.html` + `src/countdown.ts` — reads `?date=` and
   `?label=`, ticks a live countdown client-side. Fixed 140px height.
