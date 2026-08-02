@@ -22,3 +22,7 @@
   ! X-Frame-Options
 /dummy/*
   ! X-Frame-Options
+/timer
+  ! X-Frame-Options
+/timer/*
+  ! X-Frame-Options

@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Timer — Mimir Widgets</title>
+  <link rel="stylesheet" href="/src/style.css" />
+</head>
+<body>
+  <div id="app" class="widget-content timer-content">
+    <div class="timer-picker" id="timer-picker">
+      <div class="timer-presets" id="timer-presets"></div>
+      <form class="timer-custom" id="timer-custom">
+        <input
+          class="timer-custom-input"
+          id="timer-custom-input"
+          type="text"
+          inputmode="numeric"
+          autocomplete="off"
+          placeholder="Custom — 7, 1:30, 45s, 1h09m"
+          aria-label="Custom duration"
+        />
+        <button class="widget-button" type="submit">Start</button>
+      </form>
+    </div>
+
+    <div class="timer-running" id="timer-running" hidden>
+      <div class="timer-dial">
+        <svg class="timer-ring" viewBox="0 0 100 100" aria-hidden="true">
+          <circle class="timer-ring-track" cx="50" cy="50" r="45" />
+          <circle class="timer-ring-progress" id="timer-ring-progress" cx="50" cy="50" r="45" />
+        </svg>
+        <div class="timer-readout">
+          <div class="timer-clock" id="timer-clock" aria-live="polite"></div>
+          <div class="timer-total" id="timer-total"></div>
+        </div>
+      </div>
+      <div class="timer-controls">
+        <button class="timer-icon-button" id="timer-cancel" type="button" aria-label="Cancel timer">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6 18 18M18 6 6 18" /></svg>
+        </button>
+        <button class="timer-icon-button primary" id="timer-toggle" type="button" aria-label="Pause timer"></button>
+      </div>
+    </div>
+  </div>
+  <script type="module" src="/src/timer.ts"></script>
+</body>
+</html>

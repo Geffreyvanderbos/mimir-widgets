@@ -184,6 +184,17 @@ never load again to prune itself.
   tone into rest, two back into work) via a synthesized Web Audio tone —
   no audio file, and only ever triggered by a live phase transition after
   the person has clicked Start themselves, never on load.
+- `timer/index.html` + `src/timer.ts` — reads `?presets=` (a comma-separated
+  list of durations; bare numbers are minutes, with `45s`, `1:30`,
+  `1:30:00`, `2h` and compound units like `1h09m` also parsing),
+  offering them as Apple Watch-style circular buttons alongside a free-text
+  field for an ad-hoc duration. Counts down on a depleting SVG ring and
+  rings a synthesized bell — three struck partials, no audio file — at zero.
+  Fixed 240px height. Persists the running timer to namespaced
+  `localStorage` (§7) so it resumes at the correct remaining time after the
+  iframe is destroyed and recreated; a timer that expired while away lands
+  on the finished screen silently, since there was no user gesture that load
+  to unlock audio on (§8).
 - `weather/index.html` + `src/weather.ts` — reads `?lat=`, `?lon=`, and
   `?label=`, fetches the coming hours' forecast (temperature, precipitation
   chance, weather-code icon) at 3-hour steps client-side from the

@@ -12,6 +12,7 @@ export default defineConfig({
         weather: entry('./weather/index.html'),
         calc: entry('./calc/index.html'),
         dummy: entry('./dummy/index.html'),
+        timer: entry('./timer/index.html'),
       },
     },
   },
