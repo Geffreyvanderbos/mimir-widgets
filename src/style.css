@@ -170,6 +170,229 @@ body {
 }
 
 /*
+ * The picker and the running dial are two mutually exclusive screens toggled
+ * with the `hidden` attribute — which is only a `display: none` UA default,
+ * so it silently loses to the `display: flex` below without this.
+ */
+.timer-content [hidden] {
+  display: none;
+}
+
+.timer-content {
+  align-self: stretch;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.75rem 1rem;
+  text-align: center;
+}
+
+.timer-picker {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+}
+
+.timer-presets {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.6rem;
+}
+
+.timer-preset {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.05rem;
+  width: 68px;
+  height: 68px;
+  border-radius: 50%;
+  border: 2px solid var(--accent);
+  background: var(--bg-raised);
+  color: var(--ink);
+  font: inherit;
+  line-height: 1.1;
+  cursor: pointer;
+}
+
+.timer-preset:active {
+  opacity: 0.75;
+}
+
+.timer-preset-value {
+  font-size: 1.5rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.timer-preset-unit {
+  font-size: 0.6rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--accent);
+}
+
+.timer-custom {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  width: 100%;
+  max-width: 320px;
+}
+
+.timer-custom-input {
+  flex: 1;
+  min-width: 0;
+  font: inherit;
+  font-size: 0.9rem;
+  color: var(--ink);
+  background: var(--bg-raised);
+  border: 1px solid var(--hairline);
+  border-radius: 8px;
+  padding: 0.35rem 0.6rem;
+  outline: none;
+}
+
+.timer-custom-input::placeholder {
+  color: var(--ink-faint);
+}
+
+/* Accent would read as "focused" here, so an unparseable duration gets the
+   one color in this widget that isn't the accent. */
+.timer-custom-input.is-invalid {
+  border-color: #d1332e;
+}
+
+@media (prefers-color-scheme: dark) {
+  .timer-custom-input.is-invalid {
+    border-color: #ff6961;
+  }
+}
+
+.timer-custom .widget-button {
+  font-size: 0.9rem;
+  padding: 0.35rem 0.9rem;
+}
+
+.timer-running {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.timer-dial {
+  position: relative;
+  width: 148px;
+  height: 148px;
+}
+
+.timer-ring {
+  width: 100%;
+  height: 100%;
+  /* Start the depleting arc at 12 o'clock rather than 3 o'clock. */
+  transform: rotate(-90deg);
+}
+
+.timer-ring circle {
+  fill: none;
+  stroke-width: 5;
+  stroke-linecap: round;
+}
+
+.timer-ring-track {
+  stroke: var(--hairline);
+}
+
+.timer-ring-progress {
+  stroke: var(--accent);
+}
+
+.timer-readout {
+  position: absolute;
+  /* Inset past the ring's stroke so a wide clock face can't graze it. */
+  inset: 0 1rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.1rem;
+}
+
+.timer-clock {
+  font-size: 2.1rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+  line-height: 1.1;
+}
+
+.timer-clock.is-long {
+  font-size: 1.55rem;
+}
+
+.timer-clock.is-longest {
+  font-size: 1.3rem;
+}
+
+.timer-total {
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--accent);
+}
+
+.timer-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.timer-icon-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: var(--bg-raised);
+  color: var(--ink-muted);
+  cursor: pointer;
+}
+
+.timer-icon-button.primary {
+  background: var(--accent);
+  color: var(--bg);
+}
+
+.timer-icon-button:active {
+  opacity: 0.75;
+}
+
+.timer-icon-button svg {
+  width: 18px;
+  height: 18px;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  fill: none;
+}
+
+.timer-icon-button svg .filled {
+  fill: currentColor;
+  stroke-linejoin: round;
+}
+
+/*
  * The calculator is the textarea itself, not a centered card — it needs to
  * fill the frame edge-to-edge (align-self: stretch overrides body's
  * centering just for this one child) rather than shrink-wrap like the

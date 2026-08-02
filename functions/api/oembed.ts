@@ -18,6 +18,7 @@ const WIDGETS: Record<string, Widget> = {
   '/weather': { height: 180, title: () => 'Weather Forecast' },
   '/calc': { height: 200, title: () => 'Calculator' },
   '/dummy': { height: 300, title: () => 'Dummy Outline Generator' },
+  '/timer': { height: 240, title: () => 'Timer' },
 };
 
 function escapeAttr(value: string): string {
