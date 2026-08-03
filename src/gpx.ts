@@ -76,6 +76,13 @@ function build(): void {
     return;
   }
 
+  /* Before anything measures the preview box. drawTrackMap fits its zoom to
+   * the container's clientWidth/clientHeight, and a `hidden` container reports
+   * both as 0 — so unhiding this at the end of the function (as this used to)
+   * left the first render after a file load silently drawing nothing until
+   * some other input re-ran it. */
+  editorEl.hidden = false;
+
   const toleranceM = Number(detailEl.value);
   const trimM = Number(trimEl.value);
 
@@ -128,8 +135,6 @@ function build(): void {
   summaryEl.textContent =
     `${rawPoints.length.toLocaleString()} recorded points → ${simplified.length.toLocaleString()} drawn` +
     (trimM > 0 ? `, ${trimM} m trimmed from each end` : '');
-
-  editorEl.hidden = false;
 }
 
 async function loadFile(file: File): Promise<void> {
