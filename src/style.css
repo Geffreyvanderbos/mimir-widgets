@@ -6,6 +6,10 @@
   --ink-faint: #9E9FA1;
   --accent: #006fdc;
   --hairline: hsla(0, 0%, 0%, 0.12);
+  /* Map-only: a halo behind the track and a chip behind map corner text, both
+     needing to contrast with the *basemap* rather than with --bg. */
+  --map-halo: hsla(0, 0%, 100%, 0.9);
+  --map-chip: hsla(0, 0%, 100%, 0.72);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -17,6 +21,10 @@
     --ink-faint: #4b4b4f;
     --accent: #409cff;
     --hairline: hsla(0, 0%, 100%, 0.11);
+    /* The tiles are inverted to dark (see .hike-tiles), so the halo has to
+       invert with them or the track would sit in a bright outline. */
+    --map-halo: hsla(0, 0%, 0%, 0.6);
+    --map-chip: hsla(0, 0%, 0%, 0.5);
   }
 }
 
@@ -492,4 +500,338 @@ body {
   padding: 0.5rem 0.6rem;
   white-space: pre;
   overflow: auto;
+}
+
+/*
+ * Hike map. Like the calculator, this fills the frame edge-to-edge instead of
+ * shrink-wrapping — a map with 1.25rem of gutter around it reads as a mistake.
+ */
+.hike-content {
+  align-self: stretch;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  overflow: hidden;
+}
+
+.hike-map {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  background: var(--bg-raised);
+}
+
+.hike-map.is-empty,
+.hike-message {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--ink-muted);
+  text-align: center;
+}
+
+.hike-tiles {
+  position: absolute;
+  inset: 0;
+}
+
+/*
+ * OpenStreetMap's standard tiles only come in one (light) style, so dark mode
+ * is done by inverting them — the well-worn invert + 180° hue-rotate pair,
+ * which flips lightness while sending the blues and greens back to roughly
+ * where they started. Only the tile layer is filtered; the track SVG above it
+ * keeps its real colours.
+ */
+@media (prefers-color-scheme: dark) {
+  .hike-tiles {
+    filter: invert(1) hue-rotate(180deg) brightness(0.95) saturate(0.8);
+  }
+}
+
+.hike-tile {
+  position: absolute;
+  width: 256px;
+  height: 256px;
+  /* A dragged tile image would look like a broken map control. */
+  pointer-events: none;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+.hike-track {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  /* The end-point circles sit on the track's extremes, which the padding puts
+     near the frame edge — clipping them to the viewBox would shave them. */
+  overflow: visible;
+  pointer-events: none;
+}
+
+.hike-track-halo,
+.hike-track-line {
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.hike-track-halo {
+  stroke: var(--map-halo);
+  stroke-width: 6.5;
+}
+
+.hike-track-line {
+  stroke: var(--accent);
+  stroke-width: 3;
+}
+
+.hike-track-start,
+.hike-track-end {
+  stroke-width: 2;
+}
+
+.hike-track-start {
+  fill: var(--map-halo);
+  stroke: var(--accent);
+}
+
+.hike-track-end {
+  fill: var(--accent);
+  stroke: var(--map-halo);
+}
+
+.hike-scale {
+  position: absolute;
+  left: 0.5rem;
+  bottom: 0.4rem;
+  box-sizing: border-box;
+  font-size: 0.62rem;
+  font-weight: 600;
+  line-height: 1.4;
+  text-align: center;
+  color: var(--ink);
+  border: 1px solid var(--ink);
+  border-top: none;
+  /* Legible over whatever the basemap happens to be underneath. */
+  text-shadow: 0 0 3px var(--bg), 0 0 3px var(--bg);
+}
+
+.hike-attribution {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  padding: 0.1rem 0.35rem;
+  font-size: 0.6rem;
+  line-height: 1.4;
+  color: var(--ink-muted);
+  background: var(--map-chip);
+  border-top-left-radius: 4px;
+}
+
+.hike-attribution a {
+  color: inherit;
+}
+
+.hike-bar {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.55rem 0.85rem;
+  border-top: 1px solid var(--hairline);
+  background: var(--bg);
+}
+
+.hike-label {
+  font-size: 0.9rem;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.hike-stats {
+  font-size: 0.8rem;
+  color: var(--ink-muted);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/* The GPX → URL builder page (not an embed — a normal page on this site). */
+.gpx-page {
+  align-self: flex-start;
+  width: 100%;
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 3rem 1.25rem;
+}
+
+.gpx-page h1 {
+  margin-bottom: 0.25rem;
+}
+
+.gpx-page .lede {
+  margin-top: 0;
+  color: var(--ink-muted);
+}
+
+.gpx-page a {
+  color: var(--accent);
+}
+
+.gpx-drop {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.2rem;
+  padding: 1.5rem 1rem;
+  margin: 1.5rem 0 1rem;
+  border: 1.5px dashed var(--hairline);
+  border-radius: 10px;
+  background: var(--bg-raised);
+  cursor: pointer;
+  text-align: center;
+}
+
+.gpx-drop.is-active {
+  border-color: var(--accent);
+}
+
+.gpx-drop input {
+  /* The whole block is the <label>, so the input itself is redundant chrome —
+     but it stays focusable for keyboard use rather than being display:none. */
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+}
+
+.gpx-drop-title {
+  font-weight: 600;
+  color: var(--accent);
+}
+
+.gpx-drop-hint,
+.gpx-summary,
+.gpx-length {
+  font-size: 0.8rem;
+  color: var(--ink-muted);
+}
+
+.gpx-error {
+  margin: 0 0 1rem;
+  font-size: 0.85rem;
+  color: #d1332e;
+}
+
+@media (prefers-color-scheme: dark) {
+  .gpx-error {
+    color: #ff6961;
+  }
+}
+
+.gpx-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem 1.25rem;
+  margin-bottom: 0.75rem;
+}
+
+.gpx-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  flex: 1;
+  min-width: 10rem;
+  font-size: 0.8rem;
+  color: var(--ink-muted);
+}
+
+.gpx-field-wide {
+  flex-basis: 100%;
+}
+
+.gpx-field em {
+  font-style: normal;
+  font-weight: 600;
+  color: var(--accent);
+  font-variant-numeric: tabular-nums;
+}
+
+.gpx-field input[type='text'] {
+  font: inherit;
+  font-size: 0.9rem;
+  color: var(--ink);
+  background: var(--bg-raised);
+  border: 1px solid var(--hairline);
+  border-radius: 6px;
+  padding: 0.3rem 0.5rem;
+  outline: none;
+}
+
+.gpx-field input[type='range'] {
+  accent-color: var(--accent);
+  margin: 0;
+}
+
+.gpx-hint {
+  font-size: 0.8rem;
+  line-height: 1.55;
+  color: var(--ink-muted);
+}
+
+/* Mirrors the embed's reported geometry (600×320 in oembed.ts) so the preview
+   is what Mimir will actually render, not an approximation of it. */
+.gpx-preview {
+  height: 320px;
+  margin: 1.25rem 0 0.5rem;
+  border: 1px solid var(--hairline);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.gpx-url {
+  width: 100%;
+  margin: 0.75rem 0 0.5rem;
+  border: 1px solid var(--hairline);
+  border-radius: 6px;
+  outline: none;
+  resize: vertical;
+  background: var(--bg-raised);
+  color: var(--ink);
+  font-family: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace;
+  font-size: 0.75rem;
+  line-height: 1.5;
+  padding: 0.5rem 0.6rem;
+  word-break: break-all;
+}
+
+.gpx-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.gpx-actions .widget-button {
+  font-size: 0.85rem;
+  padding: 0.35rem 0.8rem;
+  text-decoration: none;
+}
+
+.gpx-length.is-warning {
+  font-weight: 600;
+  color: #d1332e;
+}
+
+@media (prefers-color-scheme: dark) {
+  .gpx-length.is-warning {
+    color: #ff6961;
+  }
 }

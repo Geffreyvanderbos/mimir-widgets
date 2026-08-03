@@ -26,3 +26,7 @@
   ! X-Frame-Options
 /timer/*
   ! X-Frame-Options
+/hike
+  ! X-Frame-Options
+/hike/*
+  ! X-Frame-Options

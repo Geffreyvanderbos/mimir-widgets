@@ -63,6 +63,19 @@ no reason to be embedded). See the FAQ in `SKILL.md` for the third-party-
 facing version of this gotcha, since it'll bite any widget host, not just
 Cloudflare Pages.
 
+**The hike widget puts its whole payload in the URL, and proxies its tiles.**
+`?t=` carries an entire GPX track (see `src/hike-codec.ts`), which is the point:
+no upload endpoint, no server-side store, no account — the Mimir note holding
+the link is the only copy of the route. The corollary is that the *basemap* is
+then the only remaining privacy leak, and a direct `tile.openstreetmap.org`
+`<img src>` would be a bad one: the requested tiles reveal where you walked,
+and every viewer of the note reveals their IP to a third party. Hence
+`functions/api/tiles/[z]/[x]/[y].ts` — a same-origin proxy, so the tile server
+only ever sees Cloudflare, the embed makes zero cross-origin requests, and a
+keyed provider's token could later live server-side instead of in a widget URL.
+It bounds zoom and x/y to its own tile grid specifically so it can't be used as
+a general-purpose image proxy.
+
 ## Conventions
 
 - No comments except where they explain non-obvious *why* — never restate
