@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Hike map builder — Mimir Widgets</title>
+  <link rel="stylesheet" href="/src/style.css" />
+</head>
+<body>
+  <div class="gpx-page">
+    <h1>Hike map builder</h1>
+    <p class="lede">
+      Drop in a GPX file and get a widget URL that <em>contains the whole
+      track</em> — no upload, no account, nothing stored on a server. The file
+      is read in this browser tab and never leaves it; the resulting link is
+      the only copy of the route, so whoever holds the note holds the data.
+    </p>
+
+    <label class="gpx-drop" id="gpx-drop">
+      <input type="file" id="gpx-file" accept=".gpx,application/gpx+xml,text/xml" />
+      <span class="gpx-drop-title">Choose a .gpx file</span>
+      <span class="gpx-drop-hint">or drag one here</span>
+    </label>
+
+    <p class="gpx-error" id="gpx-error" role="alert" hidden></p>
+
+    <div id="gpx-editor" hidden>
+      <div class="gpx-controls">
+        <label class="gpx-field gpx-field-wide">
+          <span>Label</span>
+          <input type="text" id="gpx-label" placeholder="Zugspitze loop" />
+        </label>
+        <label class="gpx-field">
+          <span>Detail <em id="gpx-detail-value">10 m</em></span>
+          <input type="range" id="gpx-detail" min="2" max="40" step="1" value="10" />
+        </label>
+        <label class="gpx-field">
+          <span>Trim ends <em id="gpx-trim-value">off</em></span>
+          <input type="range" id="gpx-trim" min="0" max="1000" step="50" value="0" />
+        </label>
+      </div>
+
+      <p class="gpx-hint">
+        <strong>Detail</strong> is how far the drawn line may stray from the
+        recording, in metres — the lever that trades URL length against
+        fidelity. Most of what the first few metres discard is GPS jitter, not
+        hike. <strong>Trim ends</strong> drops that much track from the start
+        and finish, so a route recorded from your doorstep doesn't publish your
+        doorstep.
+      </p>
+
+      <div class="gpx-preview">
+        <div class="widget-content hike-content">
+          <div class="hike-map" id="hike-map"></div>
+          <div class="hike-bar">
+            <span class="hike-label" id="hike-label"></span>
+            <span class="hike-stats" id="hike-stats"></span>
+          </div>
+        </div>
+      </div>
+      <p class="gpx-summary" id="gpx-summary"></p>
+
+      <textarea class="gpx-url" id="gpx-url" rows="4" readonly spellcheck="false"></textarea>
+      <div class="gpx-actions">
+        <button type="button" class="widget-button" id="gpx-copy">Copy URL</button>
+        <a class="widget-button secondary" id="gpx-open" target="_blank" rel="noopener">Open widget</a>
+        <span class="gpx-length" id="gpx-length"></span>
+      </div>
+
+      <p class="gpx-hint">
+        Paste that URL into a Mimir block and it renders as the map above. It
+        stays readable forever without this site's help for anything but the
+        basemap tiles — the coordinates are in the link itself.
+      </p>
+    </div>
+  </div>
+  <script type="module" src="/src/gpx.ts"></script>
+</body>
+</html>

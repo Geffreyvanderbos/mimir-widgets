@@ -19,6 +19,10 @@ const WIDGETS: Record<string, Widget> = {
   '/calc': { height: 200, title: () => 'Calculator' },
   '/dummy': { height: 300, title: () => 'Dummy Outline Generator' },
   '/timer': { height: 240, title: () => 'Timer' },
+  '/hike': {
+    height: 320,
+    title: (target) => `Hike: ${target.searchParams.get('label') ?? 'Map'}`,
+  },
 };
 
 function escapeAttr(value: string): string {

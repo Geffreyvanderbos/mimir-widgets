@@ -13,6 +13,8 @@ export default defineConfig({
         calc: entry('./calc/index.html'),
         dummy: entry('./dummy/index.html'),
         timer: entry('./timer/index.html'),
+        hike: entry('./hike/index.html'),
+        gpx: entry('./gpx/index.html'),
       },
     },
   },

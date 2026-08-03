@@ -209,6 +209,21 @@ never load again to prune itself.
   back to `document.execCommand('copy')`, then to just selecting the text,
   since a consumer's `Permissions-Policy` may withhold `clipboard-write`
   from a cross-origin frame.
+- `hike/index.html` + `src/hike.ts` — reads `?t=`, a whole recorded GPX track
+  compressed into the URL itself, and draws it over a basemap. Fixed 320px
+  height. `src/hike-codec.ts` does the compression (Douglas-Peucker
+  simplification → delta → zigzag varint → base64url; a 31 km hike recorded at
+  1 Hz lands in ~520 characters) and `src/hike-map.ts` the static slippy-map
+  render — Web Mercator projection, best-fit zoom, absolutely-positioned tiles,
+  track as SVG, no map library. Distance, climb and duration ride along as
+  three short scalar params (`?km=`, `?g=`, `?d=`) measured from the
+  full-resolution track, rather than as per-point elevation and time channels
+  that would roughly double the payload. `gpx/index.html` + `src/gpx.ts` is the
+  builder that turns a `.gpx` file into such a URL entirely in the browser —
+  deliberately *not* in `WIDGET_PATHS`, since it's a normal page on the site
+  rather than an embed.
+- `functions/api/tiles/[z]/[x]/[y].ts` — same-origin basemap tile proxy for the
+  hike widget, so the embed makes no third-party requests at all.
 - `functions/api/oembed.ts` — the oEmbed JSON endpoint all widgets share.
 - `functions/_middleware.ts` — the discovery-`<link>` injection.
 
