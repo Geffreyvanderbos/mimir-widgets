@@ -18,6 +18,7 @@ export default defineConfig({
         fx: entry('./fx/index.html'),
         color: entry('./color/index.html'),
         train: entry('./train/index.html'),
+        holidays: entry('./holidays/index.html'),
       },
     },
   },
