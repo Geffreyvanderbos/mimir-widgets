@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Nearby — Mimir Widgets</title>
+  <link rel="stylesheet" href="/src/style.css" />
+</head>
+<body>
+  <div id="app" class="widget-content nearby-content">
+    <div class="nearby-stage">
+      <div class="nearby-map" id="nearby-map"></div>
+      <!-- An overlay rather than a row under the map: the frame's height is
+           fixed and reported once (SKILL.md §4), so a selection must never be
+           able to change how tall the card wants to be. -->
+      <div class="nearby-meta" id="nearby-meta" hidden></div>
+      <!-- Siblings of the map rather than children of it: the map element
+           replaces its own children, and a press here must not also start a
+           pan underneath. -->
+      <div class="nearby-actions">
+        <button type="button" class="nearby-action" id="nearby-search">Look around here</button>
+        <button type="button" class="nearby-action" id="nearby-reset" hidden>↺</button>
+      </div>
+    </div>
+    <aside class="nearby-panel">
+      <div class="nearby-panel-head" id="nearby-head">Nearby</div>
+      <ul class="nearby-list" id="nearby-list"></ul>
+    </aside>
+  </div>
+  <script type="module" src="/src/nearby.ts"></script>
+</body>
+</html>

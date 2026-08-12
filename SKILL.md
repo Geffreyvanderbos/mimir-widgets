@@ -284,8 +284,37 @@ never load again to prune itself.
   belongs behind a Function instead (§5). Times are rendered in Dutch local
   time whatever zone the reader is in, by slicing the wall clock straight out
   of the API's own offset-stamped timestamps rather than converting them.
+- `nearby/index.html` + `src/nearby.ts` + `src/nearby-map.ts` — reads `?lat=`,
+  `?lon=`, `?radius=`, `?amenities=`, `?zoom=` and `?label=`, and shows a
+  pannable, zoomable map beside an accordion of what OpenStreetMap has nearby,
+  from Overpass — one category open at a time, so the panel fits the frame
+  whatever the radius turns up. The one to read if your widget is *interactive*
+  rather than a card. Six things generalise. **An in-widget control may override
+  a parameter, but only in memory.** "Look around here" re-queries at the map's
+  current centre and never touches the address bar, so the URL keeps describing
+  what a reload — or another reader of the same note — will get. **Let the
+  server own the icons.**
+  Category emoji and labels come back in the response rather than living in a
+  client table, because three parts of this card draw a category and a duplicated
+  icon eventually disagrees with itself. **A two-pane widget must never restack.**
+  A media query that turned side-by-side into stacked would need a taller frame
+  than the single height §4 lets you report, and that height is fixed before
+  anyone's column width is known — so the panes narrow instead, and the list
+  column gives ground. **Selection must not change the card's height**: the
+  metadata strip is an overlay on the map, capped at two ellipsized lines, for
+  exactly that reason. **`touch-action: none` on anything you drag**, or a touch
+  drag scrolls the page your iframe is embedded in instead. And **take pointer
+  capture only once the gesture is definitely a drag** — capturing on
+  `pointerdown` retargets the compatibility `click` to the capturing element,
+  which silently kills every clickable child (here, the markers). Its data comes
+  through a Function rather than straight from the browser even though Overpass
+  allows CORS, for the same privacy reason the tile proxy exists plus one more:
+  a fallback chain across public instances only works server-side, since a
+  refused preflight isn't a failure the page can retry past.
 - `functions/api/tiles/[z]/[x]/[y].ts` — same-origin basemap tile proxy for the
-  hike widget, so the embed makes no third-party requests at all.
+  hike and nearby widgets, so those embeds make no third-party requests at all.
+- `functions/api/nearby.ts` — the Overpass query/fallback endpoint, which also
+  normalises and balances the result set.
 - `functions/api/oembed.ts` — the oEmbed JSON endpoint all widgets share.
 - `functions/_middleware.ts` — the discovery-`<link>` injection.
 

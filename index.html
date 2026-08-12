@@ -210,6 +210,26 @@
       </div>
 
       <div class="widget-card">
+        <h2><a href="/nearby?lat=51.9850&lon=5.8987&radius=1500&label=Sonsbeek">Nearby</a></h2>
+        <p>
+          A map you can actually pan and zoom, beside a scrolling list of what
+          is around that point — water, toilets, benches, cafés, parking by
+          default. Tapping a pin or a row selects the same place. Data from
+          <a href="https://www.openstreetmap.org/">OpenStreetMap</a> via
+          Overpass; tiles and queries are both proxied here, so nobody
+          downstream learns where you're standing. <code>?amenities=</code>
+          takes named categories — <code>dog_park</code>, <code>vet</code>,
+          <code>toilets</code>, listed at
+          <a href="/api/nearby?catalog=1">/api/nearby?catalog=1</a> — or any OSM
+          tag at all, written <code>key=value</code>, so
+          <code>tourism=artwork</code> works without anyone adding it first.
+        </p>
+        <p class="widget-params">
+          <code>?lat=</code><code>?lon=</code><code>?radius=</code><code>?amenities=</code><code>?dogs=</code><code>?zoom=</code><code>?label=</code>
+        </p>
+      </div>
+
+      <div class="widget-card">
         <h2><a href="/dummy?blocks=12&depth=2">Dummy Outline</a></h2>
         <p>
           Dash-prefixed outline blocks, two spaces per level of indent, from

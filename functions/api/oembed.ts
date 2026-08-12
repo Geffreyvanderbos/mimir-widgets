@@ -57,6 +57,13 @@ const WIDGETS: Record<string, Widget> = {
     title: (target) =>
       `Public holidays: ${target.searchParams.get('country')?.toUpperCase() ?? '?'}`,
   },
+  // Taller than the other map widget on purpose: this one isn't a picture of a
+  // route but a map you drive, next to a list that has to show enough rows for
+  // scrolling to be the point rather than the whole content.
+  '/nearby': {
+    height: 420,
+    title: (target) => `Nearby: ${target.searchParams.get('label') ?? 'Places'}`,
+  },
   '/fx': {
     height: 180,
     title: (target) =>
