@@ -250,6 +250,17 @@ never load again to prune itself.
   builder that turns a `.gpx` file into such a URL entirely in the browser —
   deliberately *not* in `WIDGET_PATHS`, since it's a normal page on the site
   rather than an embed.
+- `holidays/index.html` + `src/holidays.ts` — reads `?country=`, `?county=`,
+  `?n=` and `?en=`, and counts down to a country's next public holiday over a
+  list of the ones after it, from the [Nager.Date](https://date.nager.at/) API
+  (no key, `access-control-allow-origin: *`). Height is a function of `?n=`,
+  like the train widget. Two details worth stealing: the rows are
+  `display: contents` inside a single grid, so the date column lines up down
+  the card without pinning it to a width a long date would overflow — which
+  in turn means every row must emit every cell, even the empty ones. And the
+  day count is a difference between two *UTC* midnights derived from local
+  calendar dates, which is whole days across a daylight-saving change where
+  subtracting local midnights isn't.
 - `train/index.html` + `src/train.ts` — reads `?from=`, `?to=`, `?key=`, `?at=`,
   `?arrive=` and `?n=`, and renders a live Dutch Railways departure board for
   one route from the [NS Reisinformatie](https://apiportal.ns.nl/) API,

@@ -42,3 +42,7 @@
   ! X-Frame-Options
 /train/*
   ! X-Frame-Options
+/holidays
+  ! X-Frame-Options
+/holidays/*
+  ! X-Frame-Options

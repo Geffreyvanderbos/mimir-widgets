@@ -1319,3 +1319,79 @@ input.fx-amount:focus {
 .train-foot a:hover {
   color: var(--accent);
 }
+
+.holidays-hero {
+  margin-bottom: 0.75rem;
+}
+
+.holidays-name {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.holidays-when {
+  display: flex;
+  align-items: baseline;
+  gap: 0.4rem;
+  margin: 0.1rem 0 0;
+  font-size: 0.85rem;
+  color: var(--ink-muted);
+}
+
+.holidays-count {
+  font-size: 1.5rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--accent);
+}
+
+.holidays-date {
+  margin-left: auto;
+}
+
+/* The grid lives on the list, not on each row, so the date column is one
+   column down the whole card — a per-row grid would only line up if the dates
+   were forced to a fixed width, and "Sun, 28 Mar 2027" is wider than that. */
+.holidays-list {
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr) auto;
+  align-items: baseline;
+  gap: 0.15rem 0.5rem;
+  margin: 0;
+  padding: 0.7rem 0 0;
+  list-style: none;
+  border-top: 1px solid var(--hairline);
+  font-size: 0.88rem;
+}
+
+.holidays-row {
+  display: contents;
+}
+
+.holidays-row-date {
+  color: var(--ink-muted);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.holidays-row-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.holidays-scope {
+  padding: 0 0.3rem;
+  border-radius: 4px;
+  background: var(--hairline);
+  color: var(--ink-muted);
+  font-size: 0.72rem;
+  white-space: nowrap;
+}
+
+.holidays-message {
+  margin: 0;
+  color: var(--ink-muted);
+}

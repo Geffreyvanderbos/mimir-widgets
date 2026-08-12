@@ -40,6 +40,16 @@ const WIDGETS: Record<string, Widget> = {
       `Departures: ${target.searchParams.get('from') ?? '?'} → ` +
       `${target.searchParams.get('to') ?? '?'}`,
   },
+  '/holidays': {
+    // Countdown block, then one line per upcoming holiday. Must stay in step
+    // with src/holidays.ts's own clamp on ?n=.
+    height: (target) => {
+      const requested = Math.round(Number(target.searchParams.get('n'))) || 4;
+      return 140 + Math.min(Math.max(requested, 1), 8) * 24;
+    },
+    title: (target) =>
+      `Public holidays: ${target.searchParams.get('country')?.toUpperCase() ?? '?'}`,
+  },
   '/fx': {
     height: 180,
     title: (target) =>
