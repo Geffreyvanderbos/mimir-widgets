@@ -157,7 +157,9 @@ function render(color: Color) {
   }
 }
 
-let lastValid: Color = parseColor('#006fdc')!;
+const DEFAULT_COLOR = '#006fdc';
+
+let lastValid: Color = parseColor(DEFAULT_COLOR)!;
 
 function update() {
   const parsed = parseColor(inputEl.value);
@@ -167,7 +169,20 @@ function update() {
   render(parsed);
 }
 
-inputEl.value = params.get('c') ?? '#006fdc';
+// A link written by hand as `?c=#006fdc` puts the colour in the URL's
+// *fragment*, not its query: the `#` starts the fragment, so `c` arrives
+// present but empty. Reading the fragment as a fallback makes that link work
+// as written, and falling back on an empty string — rather than only on a
+// missing one — stops the field sitting blank behind its placeholder while the
+// card renders a colour the field doesn't show.
+function requestedColor(): string {
+  const queried = params.get('c')?.trim();
+  if (queried) return queried;
+  const fragment = decodeURIComponent(location.hash).trim();
+  return fragment.length > 1 && parseColor(fragment) !== null ? fragment : DEFAULT_COLOR;
+}
+
+inputEl.value = requestedColor();
 const initial = parseColor(inputEl.value);
 if (initial !== null) lastValid = initial;
 inputEl.classList.toggle('is-invalid', initial === null);
