@@ -23,6 +23,10 @@ const WIDGETS: Record<string, Widget> = {
     height: 320,
     title: (target) => `Hike: ${target.searchParams.get('label') ?? 'Map'}`,
   },
+  '/color': {
+    height: 320,
+    title: (target) => `Color: ${target.searchParams.get('c') ?? '#006fdc'}`,
+  },
   '/fx': {
     height: 180,
     title: (target) =>

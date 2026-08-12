@@ -14,6 +14,7 @@ const WIDGET_PATHS = [
   '/timer',
   '/hike',
   '/fx',
+  '/color',
 ];
 
 export const onRequest: PagesFunction = async (context) => {

@@ -836,6 +836,248 @@ body {
   }
 }
 
+/*
+ * The colour under discussion *is* the top of this card, edge to edge — the
+ * one place in this repo where a widget's own background isn't --bg. Ink on
+ * it therefore can't come from the token set; it's picked in JS from the
+ * colour's own luminance and flipped with .is-dark.
+ */
+.color-content {
+  align-self: stretch;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.color-swatch {
+  position: relative;
+  flex: 1;
+  /* Enough for the input's own line box plus the meta row: at the narrowest
+     embed the grid is nine rows tall and this is what's left of the 320px. */
+  min-height: 4.8rem;
+  display: flex;
+  align-items: flex-end;
+  padding: 0.7rem 1.1rem;
+  /* Ink defaults to the dark end; .is-dark swaps it for a light swatch. */
+  --swatch-ink: #16161a;
+  --swatch-ink-soft: rgba(20, 20, 26, 0.62);
+  color: var(--swatch-ink);
+  /* Shows through wherever the colour itself is translucent, so an alpha
+     below 1 reads as transparency rather than as a slightly different hue. */
+  background-color: var(--bg-raised);
+  background-image:
+    repeating-conic-gradient(var(--hairline) 0% 25%, transparent 0% 50%);
+  background-size: 14px 14px;
+}
+
+.color-swatch.is-dark {
+  --swatch-ink: #f4f4f6;
+  --swatch-ink-soft: rgba(244, 244, 246, 0.68);
+}
+
+.color-swatch-fill {
+  position: absolute;
+  inset: 0;
+}
+
+/* Sits on the swatch as a ring drawn in the same contrast-picked ink as the
+   text, so it reads as part of the colour rather than as a control dropped on
+   top of it. The native control's own swatch is hidden — the card behind it
+   already *is* the colour. */
+.color-picker {
+  position: absolute;
+  top: 0.7rem;
+  right: 1.1rem;
+  width: 1.35rem;
+  height: 1.35rem;
+  padding: 0;
+  appearance: none;
+  -webkit-appearance: none;
+  background: transparent;
+  border: 1.5px solid var(--swatch-ink-soft);
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.color-picker:hover {
+  border-color: var(--swatch-ink);
+}
+
+/* Each vendor pseudo-element needs its own rule: a selector list containing
+   one the engine doesn't recognise is dropped whole, taking the other with
+   it. The swatch itself is painted out because the card behind it already is
+   the colour — what's left is the ring. */
+.color-picker::-webkit-color-swatch-wrapper {
+  padding: 0;
+}
+
+.color-picker::-webkit-color-swatch {
+  background: transparent;
+  border: none;
+  border-radius: 50%;
+}
+
+.color-picker::-moz-color-swatch {
+  background: transparent;
+  border: none;
+  border-radius: 50%;
+}
+
+/* Nothing this control can express is outside sRGB, so rather than let it
+   silently clip a wide-gamut colour it steps back until one is entered. */
+.color-picker:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.color-swatch-body {
+  position: relative;
+  width: 100%;
+  min-width: 0;
+}
+
+.color-input {
+  display: block;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  font: inherit;
+  font-size: 1.35rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--swatch-ink);
+  background: transparent;
+  border: none;
+  /* Without this the field reads as a heading and nobody clicks it — found by
+     handing the widget over and watching exactly that happen. The rule is the
+     same one .fx-amount uses: no box, just enough of a rule under the text to
+     say "editable", brightening on focus. */
+  border-bottom: 1px solid var(--swatch-ink-soft);
+  border-radius: 0;
+  outline: none;
+  transition: border-color 120ms ease;
+}
+
+.color-input:hover,
+.color-input:focus {
+  border-bottom-color: var(--swatch-ink);
+}
+
+.color-input::placeholder {
+  color: var(--swatch-ink-soft);
+}
+
+.color-input::selection {
+  /* The usual selection colour is unreadable against an arbitrary swatch. */
+  background: var(--swatch-ink);
+  color: transparent;
+}
+
+.color-input.is-invalid {
+  text-decoration: underline wavy currentColor 1px;
+  text-underline-offset: 0.28em;
+}
+
+.color-meta {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  margin: 0.1rem 0 0;
+  font-size: 0.72rem;
+  line-height: 1.4;
+  color: var(--swatch-ink-soft);
+}
+
+.color-gamut {
+  flex: none;
+  padding: 0.05rem 0.4rem;
+  border: 1px solid currentColor;
+  border-radius: 999px;
+  font-size: 0.62rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+/* Two columns once there's room for a full oklab() string in each, one below
+   that — auto-fit does it without a resize listener. */
+.color-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(15.5rem, 1fr));
+  align-content: start;
+  padding: 0.3rem 0.6rem 0.5rem;
+}
+
+.color-row {
+  display: flex;
+  align-items: baseline;
+  gap: 0.6rem;
+  width: 100%;
+  min-width: 0;
+  margin: 0;
+  padding: 0.16rem 0.5rem;
+  font: inherit;
+  text-align: left;
+  color: var(--ink);
+  background: transparent;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.color-row:hover,
+.color-row:focus-visible {
+  background: var(--bg-raised);
+  outline: none;
+}
+
+.color-row-label {
+  flex: none;
+  width: 4.6rem;
+  font-size: 0.62rem;
+  font-weight: 600;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+
+.color-row:hover .color-row-label,
+.color-row.is-copied .color-row-label {
+  color: var(--accent);
+}
+
+.color-row-value {
+  flex: 1;
+  min-width: 0;
+  font-size: 0.78rem;
+  font-variant-numeric: tabular-nums;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* This space can't represent the colour that was entered, so what's shown is
+   a clipped stand-in. Marked rather than hidden — it's still the string you'd
+   have to write. */
+.color-row.is-clipped .color-row-value {
+  color: var(--ink-muted);
+}
+
+.color-row.is-clipped .color-row-value::after {
+  content: ' ·clipped';
+  font-size: 0.62rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: var(--ink-faint);
+}
+
+.color-scratch {
+  position: fixed;
+  top: -100vh;
+  left: 0;
+  opacity: 0;
+}
+
 .fx-content {
   align-self: stretch;
   height: 100%;

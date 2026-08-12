@@ -16,6 +16,7 @@ export default defineConfig({
         hike: entry('./hike/index.html'),
         gpx: entry('./gpx/index.html'),
         fx: entry('./fx/index.html'),
+        color: entry('./color/index.html'),
       },
     },
   },
