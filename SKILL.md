@@ -190,7 +190,13 @@ never load again to prune itself.
   offering them as Apple Watch-style circular buttons alongside a free-text
   field for an ad-hoc duration. Counts down on a depleting SVG ring and
   rings a synthesized bell — three struck partials, no audio file — at zero.
-  Fixed 240px height. Persists the running timer to namespaced
+  Fixed 280px height. The `h`/`m`/`s` keys under that field are the phone fix
+  and generalise to any widget with a mostly-numeric text input: `inputmode`
+  is a promise about the *keyboard*, and a numeric pad has no letters on it,
+  so a grammar like `1h09m` is unreachable on a phone however well it parses.
+  The keys cancel the pointer's default rather than acting on focus, since
+  moving focus to a button is what closes the keypad mid-entry. Persists the
+  running timer to namespaced
   `localStorage` (§7) so it resumes at the correct remaining time after the
   iframe is destroyed and recreated; a timer that expired while away lands
   on the finished screen silently, since there was no user gesture that load

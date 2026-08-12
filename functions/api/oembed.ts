@@ -20,7 +20,9 @@ const WIDGETS: Record<string, Widget> = {
   '/weather': { height: 180, title: () => 'Weather Forecast' },
   '/calc': { height: 200, title: () => 'Calculator' },
   '/dummy': { height: 300, title: () => 'Dummy Outline Generator' },
-  '/timer': { height: 240, title: () => 'Timer' },
+  // 280 rather than 240 since the unit keys landed under the custom field:
+  // eight presets wrap to two rows, and that case now measures ~257.
+  '/timer': { height: 280, title: () => 'Timer' },
   '/hike': {
     height: 320,
     title: (target) => `Hike: ${target.searchParams.get('label') ?? 'Map'}`,
