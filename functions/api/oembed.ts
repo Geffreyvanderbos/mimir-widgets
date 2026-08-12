@@ -42,10 +42,13 @@ const WIDGETS: Record<string, Widget> = {
   },
   '/holidays': {
     // Countdown block, then one line per upcoming holiday. Must stay in step
-    // with src/holidays.ts's own clamp on ?n=.
+    // with src/holidays.ts's own clamp on ?n=. The card itself measures about
+    // 135 + 25n; the slack on top of that is what lets a long ?label= wrap to
+    // a second line without the frame clipping — and it clips at *both* ends,
+    // since body centres its content rather than anchoring it to the top.
     height: (target) => {
       const requested = Math.round(Number(target.searchParams.get('n'))) || 4;
-      return 140 + Math.min(Math.max(requested, 1), 8) * 24;
+      return 160 + Math.min(Math.max(requested, 1), 8) * 26;
     },
     title: (target) =>
       `Public holidays: ${target.searchParams.get('country')?.toUpperCase() ?? '?'}`,
