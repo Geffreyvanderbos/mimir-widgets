@@ -46,3 +46,7 @@
   ! X-Frame-Options
 /holidays/*
   ! X-Frame-Options
+/nearby
+  ! X-Frame-Options
+/nearby/*
+  ! X-Frame-Options

@@ -1437,3 +1437,410 @@ input.fx-amount:focus {
   margin: 0;
   color: var(--ink-muted);
 }
+
+/*
+ * Nearby. Fills the frame edge-to-edge like the hike map, but as two columns:
+ * a live map, and a list that scrolls inside its own column.
+ *
+ * It deliberately never stacks at narrow widths. A media query that turned this
+ * into map-above-list would need a *taller* frame than the one height the
+ * oEmbed response gets to report (SKILL.md §4), and that height is chosen
+ * before anyone's column width is known — so the two columns get narrower
+ * instead, and the list column is the one that gives ground.
+ */
+.nearby-content {
+  align-self: stretch;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  padding: 0;
+  overflow: hidden;
+}
+
+.nearby-stage {
+  position: relative;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.nearby-map {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  background: var(--bg-raised);
+  cursor: grab;
+  /* Without this, a touch drag scrolls whatever page the iframe is sitting in
+     rather than panning the map — and the widget is embedded by definition. */
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.nearby-map.is-dragging {
+  cursor: grabbing;
+}
+
+.nearby-map.is-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 1rem;
+  font-size: 0.85rem;
+  color: var(--ink-muted);
+  text-align: center;
+}
+
+/* A zero-sized box whose children are placed in world pixels: panning moves
+   this one element, so the tiles and the markers travel together for free. */
+.nearby-world {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 0;
+  height: 0;
+  will-change: transform;
+}
+
+.nearby-tile {
+  position: absolute;
+  width: 256px;
+  height: 256px;
+  pointer-events: none;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+/*
+ * Same invert trick as the hike map, but applied per tile rather than to a
+ * wrapping layer: here the markers share that layer, and inverting them would
+ * turn every emoji into a photo negative of itself.
+ */
+@media (prefers-color-scheme: dark) {
+  .nearby-tile {
+    filter: invert(1) hue-rotate(180deg) brightness(0.95) saturate(0.8);
+  }
+}
+
+.nearby-here {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  margin: -6px 0 0 -6px;
+  border-radius: 50%;
+  background: var(--accent);
+  border: 2px solid var(--map-halo);
+  pointer-events: none;
+}
+
+.nearby-marker {
+  position: absolute;
+  /* left/top are the place itself; the chip is centred on it. */
+  transform: translate(-50%, -50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  font-size: 13px;
+  line-height: 1;
+  background: var(--map-halo);
+  border: 1px solid var(--hairline);
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.nearby-marker.is-active {
+  /* Outline rather than a background swap: the pin is an emoji and won't take
+     a foreground colour, so the selected state has to be drawn around it. */
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+  transform: translate(-50%, -50%) scale(1.15);
+  z-index: 2;
+}
+
+.nearby-marker-glyph {
+  pointer-events: none;
+}
+
+/* Top-left, opposite the zoom buttons, and clear of the metadata strip along
+   the bottom — the three overlays never share a corner. */
+.nearby-actions {
+  position: absolute;
+  top: 0.4rem;
+  left: 0.4rem;
+  display: flex;
+  gap: 0.25rem;
+  max-width: calc(100% - 3rem);
+}
+
+.nearby-action {
+  font: inherit;
+  font-size: 0.72rem;
+  line-height: 1.5;
+  padding: 0.1rem 0.45rem;
+  color: var(--ink);
+  background: var(--map-chip);
+  border: 1px solid var(--hairline);
+  border-radius: 6px;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.nearby-action:hover {
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
+.nearby-action:disabled {
+  color: var(--ink-faint);
+  cursor: default;
+}
+
+.nearby-action[hidden] {
+  display: none;
+}
+
+.nearby-zoom {
+  position: absolute;
+  top: 0.4rem;
+  right: 0.4rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.nearby-zoom-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  font: inherit;
+  font-size: 0.95rem;
+  line-height: 1;
+  color: var(--ink);
+  background: var(--map-chip);
+  border: 1px solid var(--hairline);
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.nearby-zoom-button:hover {
+  color: var(--accent);
+}
+
+.nearby-attribution {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  padding: 0.1rem 0.35rem;
+  font-size: 0.6rem;
+  line-height: 1.4;
+  color: var(--ink-muted);
+  background: var(--map-chip);
+  border-top-left-radius: 4px;
+}
+
+.nearby-attribution a {
+  color: inherit;
+}
+
+/*
+ * The metadata strip floats over the map rather than sitting under it: the
+ * frame's height is fixed and reported once, so selecting a place must not be
+ * able to change how tall the card wants to be. Two lines, both ellipsized,
+ * for the same reason.
+ */
+.nearby-meta {
+  position: absolute;
+  left: 0.4rem;
+  bottom: 1.2rem;
+  max-width: calc(100% - 0.8rem);
+  padding: 0.3rem 0.5rem;
+  background: var(--bg-raised);
+  border: 1px solid var(--hairline);
+  border-radius: 8px;
+  font-size: 0.75rem;
+  line-height: 1.35;
+  /* Clicks belong to the map underneath — this is a caption, not a control. */
+  pointer-events: none;
+}
+
+.nearby-meta-title,
+.nearby-meta-detail {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.nearby-meta-title {
+  font-weight: 600;
+}
+
+.nearby-meta-detail {
+  color: var(--ink-muted);
+}
+
+.nearby-panel {
+  flex: 0 0 auto;
+  width: clamp(7rem, 34%, 12rem);
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  border-left: 1px solid var(--hairline);
+  background: var(--bg);
+}
+
+.nearby-panel-head {
+  padding: 0.45rem 0.55rem 0.4rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--ink-muted);
+  border-bottom: 1px solid var(--hairline);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.nearby-list {
+  flex: 1;
+  min-height: 0;
+  margin: 0;
+  padding: 0.25rem;
+  list-style: none;
+  overflow-y: auto;
+  /* Reaching the end of this list shouldn't start scrolling the note behind
+     the embed. */
+  overscroll-behavior: contain;
+}
+
+/*
+ * The list is an accordion of categories rather than one flat run of places:
+ * five collapsed rows fit any frame this widget will ever be given, where a
+ * flat list in a 12rem column is a scroll through three dozen benches to reach
+ * the toilet. One group is open at a time — see src/nearby.ts.
+ */
+.nearby-group + .nearby-group {
+  margin-top: 0.1rem;
+}
+
+.nearby-group-head,
+.nearby-item {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  width: 100%;
+  padding: 0.25rem 0.3rem;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--ink);
+  font: inherit;
+  font-size: 0.8rem;
+  line-height: 1.35;
+  text-align: left;
+  cursor: pointer;
+}
+
+.nearby-group-head {
+  font-weight: 600;
+}
+
+.nearby-group-head:hover,
+.nearby-item:hover {
+  background: var(--bg-raised);
+}
+
+.nearby-group-head.is-open {
+  color: var(--accent);
+}
+
+/* A category nothing was found in still gets a row: "no toilet within 1.5 km"
+   is an answer, and a silently missing row isn't. */
+.nearby-group-head.is-empty {
+  color: var(--ink-faint);
+  font-weight: 400;
+  cursor: default;
+}
+
+.nearby-group-count {
+  flex: none;
+  font-size: 0.72rem;
+  font-weight: 400;
+  color: var(--ink-faint);
+  font-variant-numeric: tabular-nums;
+}
+
+.nearby-sub {
+  margin: 0.1rem 0 0.2rem;
+  /* Indented past the group's own icon, so a place reads as belonging to the
+     category above it rather than as another category. */
+  padding: 0 0 0 1.1rem;
+  list-style: none;
+}
+
+.nearby-sub .nearby-item {
+  font-size: 0.78rem;
+}
+
+.nearby-item.is-active {
+  background: var(--accent);
+  color: var(--bg);
+}
+
+.nearby-item-glyph {
+  flex: none;
+  font-size: 0.9rem;
+}
+
+.nearby-item-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.nearby-item-paw {
+  flex: none;
+  font-size: 0.7rem;
+}
+
+.nearby-item-distance {
+  flex: none;
+  font-size: 0.72rem;
+  color: var(--ink-faint);
+  font-variant-numeric: tabular-nums;
+}
+
+.nearby-item.is-active .nearby-item-distance {
+  color: inherit;
+  opacity: 0.75;
+}
+
+.nearby-status {
+  padding: 0.5rem 0.4rem;
+  font-size: 0.78rem;
+  line-height: 1.4;
+  color: var(--ink-muted);
+}
+
+.nearby-retry {
+  display: block;
+  margin-top: 0.35rem;
+  padding: 0.15rem 0.5rem;
+  font: inherit;
+  font-size: 0.75rem;
+  color: var(--ink);
+  background: var(--bg-raised);
+  border: 1px solid var(--hairline);
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.nearby-retry:hover {
+  color: var(--accent);
+  border-color: var(--accent);
+}

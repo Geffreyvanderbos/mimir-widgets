@@ -97,6 +97,86 @@ function of the target URL. A per-URL height still has to be a height the card
 actually fits inside, with slack for a wrapped label — `body` centres its
 content, so an underestimate clips the top and bottom alike.
 
+**The nearby widget is the first one you drive rather than look at, and the
+first with two panes.** `/nearby` is a live map beside a scrolling list of what
+OpenStreetMap knows is around a point. Three things about it are load-bearing.
+
+It hand-rolls the slippy map in `src/nearby-map.ts` rather than adding Leaflet —
+but note that `src/hike-map.ts`'s anti-library comment doesn't transfer, because
+that widget genuinely didn't want panning and this one is nothing but panning.
+The reason here is narrower: what an embedded map needs is drag, integer zoom
+and markers, and that is a few hundred lines against a first real runtime
+dependency. What *doesn't* carry over from `hike-map.ts` is its draw model — it
+rebuilds every `<img>` per draw, which is fine once and a flicker per frame at
+60fps, so this one keeps a live `Map` of tile elements and only adds, removes
+and repositions. Two things there are easy to get wrong and invisible until
+someone tries it on a phone: `touch-action: none` on the map (without it a touch
+drag scrolls the *host page* instead of panning), and taking pointer capture
+only *after* the gesture passes the tap threshold — capturing on `pointerdown`
+retargets the compatibility `click`, and every marker silently stops responding.
+
+Overpass goes through `functions/api/nearby.ts` even though Overpass sends
+`access-control-allow-origin: *` and needs no proxy. The privacy argument from
+the hike tiles applies with more force — the payload here *is* someone's
+location — and, separately, a browser-side fallback chain can't distinguish a
+dead instance from a refused preflight. The client never composes Overpass QL:
+it sends a coordinate and slugs, the Function looks them up in a fixed table.
+Two things learned by measurement rather than reading: `overpass.osm.ch` is a
+Swiss extract that answers a Dutch query `200` with zero elements, so a regional
+instance in a fallback list is worse than no fallback (it ends the chain with a
+confident wrong answer); and `overpass.kumi.systems` is a CNAME onto
+`private.coffee`, so listing both is one machine wearing two names.
+
+The list is not simply the nearest N, and it isn't flat. A nearest-60 over the
+default set in a park came back 50 benches, 5 parking, 2 water, 2 cafés, 1
+toilet — cities map benches by the dozen, so the thing you actually went looking
+for is never near the top. `balance()` takes a round at a time across the
+requested categories; on top of that the panel is a one-open-at-a-time
+accordion, keyed by category and ordered by which one's nearest member is
+closest. Five collapsed rows fit any frame this widget will be given, where a
+flat list in a twelve-rem column is a scroll past three dozen benches. A
+category with no results still gets a (disabled) row: "no toilet within 1.5 km"
+is an answer, a missing row is not.
+
+`?dogs=1` is the shape a filter takes when the data won't support the filter you
+wanted. "Only dog-friendly cafés" sounds obvious and returns an empty card:
+`dog=*` is an access tag for *paths* (120k co-occurrences with `highway` against
+18.7k with `leisure`), and on eateries it's near-unmapped — 0 of 240 within 2 km
+of Arnhem centre, 1 of 1880 in Amsterdam, 4 of 1209 in Berlin. So the flag does
+only what the tag can back: drops explicit `dog=no`, floats explicit yes to the
+top, keeps everything untagged, because unknown is not a refusal. Worth
+generalising — before filtering on an OSM tag, count it in three cities first,
+since an empty widget reads as broken rather than as honest.
+
+"Look around here" re-queries at whatever the map is currently centred on, and
+that origin lives in memory only — nothing is written to the address bar, to
+history or to storage. The parameters stay the source of truth: a reload, or
+anyone else opening the same note, lands back at the URL's coordinate. Worth
+keeping that shape for any widget control that changes what's displayed, since
+a URL that silently stopped describing what the embed shows is a URL that can no
+longer be shared or re-embedded.
+
+The slug table is a shorthand, not a ceiling. `?amenities=` also takes a raw
+`key=value`, so any of OpenStreetMap's thousands of tags is reachable without a
+deploy — `tourism=artwork` returns 115 hits around Sonsbeek and nobody had to
+predict it. What keeps that safe is **the charset, not the allowlist**: keys and
+values are matched against `^[a-z][a-z0-9_:]*$`-ish patterns and anything else
+is *dropped rather than escaped*, since no real OSM tag needs escaping, so a
+value that would is a value being used for something else. A bare key with no
+value is refused too — `["building"]` is a far heavier query than
+`["building"="yes"]`. Categories are capped at 8 per request because each one is
+its own `out` statement on someone else's volunteer hardware. `/api/nearby?catalog=1`
+publishes the named half, since otherwise it exists only in a `const` nobody
+writing a URL will read. A slug is one `key=value` unless it sets `loose`, which
+matches inside a semicolon list: a bin tagged `waste=trash;dog_excrement` is a
+dog bin, and exact matching finds none of them.
+
+The category's icon and label live in the *server's* table and travel back in
+the response, which is why there's no client-side amenity table any more. Three
+places draw a category — a map pin, an accordion header, the metadata strip —
+and an icon defined in two files is one that eventually disagrees with itself.
+It also means a category added server-side arrives already drawable.
+
 ## Conventions
 
 - No comments except where they explain non-obvious *why* — never restate

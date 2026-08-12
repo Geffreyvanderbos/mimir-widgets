@@ -16,9 +16,12 @@
 
 const TILE_ORIGIN = 'https://tile.openstreetmap.org';
 
-/* Must match src/hike-map.ts's MAX_ZOOM. Bounding the zoom (and the x/y range
- * below) is what stops this being an open image proxy for arbitrary paths. */
-const MAX_ZOOM = 17;
+/* The union of what the map widgets ask for, not any one widget's own limit:
+ * src/hike-map.ts stops at 17 (a static picture of a route needs no more),
+ * src/nearby-map.ts at 18 (a map you can zoom in on wants to reach street
+ * level). Bounding the zoom (and the x/y range below) is what stops this being
+ * an open image proxy for arbitrary paths. */
+const MAX_ZOOM = 18;
 
 const CACHE_SECONDS = 60 * 60 * 24 * 30;
 
