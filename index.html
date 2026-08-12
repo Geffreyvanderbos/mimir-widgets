@@ -6,13 +6,84 @@
   <title>Mimir Widgets</title>
   <link rel="stylesheet" href="/src/style.css" />
   <style>
-    .page { max-width: 640px; margin: 0 auto; padding: 3rem 1.25rem; }
-    h1 { margin-bottom: 0.25rem; }
-    .lede { color: var(--ink-muted); margin-top: 0; }
-    .widget-list { display: flex; flex-direction: column; gap: 1rem; margin: 2rem 0; }
-    .widget-entry h2 { margin: 0 0 0.5rem; font-size: 1.1rem; }
-    .widget-entry code { background: var(--bg); border: 1px solid var(--hairline); border-radius: 4px; padding: 0.1rem 0.35rem; }
+    body { display: block; }
+    .page { max-width: 900px; margin: 0 auto; padding: 3rem 1.25rem 4rem; }
+    h1 { margin: 0 0 0.25rem; }
+    .lede { max-width: 34rem; color: var(--ink-muted); margin-top: 0; }
     a { color: var(--accent); }
+
+    .widget-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+      gap: 1rem;
+      margin: 2.5rem 0;
+    }
+
+    .widget-card {
+      display: flex;
+      flex-direction: column;
+      padding: 1rem 1.1rem 1.1rem;
+      background: var(--bg-raised);
+      border: 1px solid var(--hairline);
+      border-radius: 10px;
+    }
+
+    .widget-card:focus-within {
+      border-color: var(--accent);
+    }
+
+    /* The title is the link rather than the whole card: several cards credit
+       the API behind them, and an anchor can't be nested in another one. */
+    .widget-card h2 {
+      margin: 0 0 0.35rem;
+      font-size: 1rem;
+      font-weight: 600;
+    }
+
+    .widget-card h2 a {
+      text-decoration: none;
+    }
+
+    .widget-card h2 a:hover {
+      text-decoration: underline;
+    }
+
+    .widget-card h2 .no-link {
+      color: var(--ink);
+    }
+
+    .widget-card p {
+      margin: 0;
+      font-size: 0.875rem;
+      line-height: 1.5;
+      color: var(--ink-muted);
+    }
+
+    .widget-card p code {
+      font-size: 0.85em;
+      color: var(--ink);
+    }
+
+    /* Pushed to the bottom so the parameter row lines up across a row of
+       cards, however uneven the descriptions above it are. */
+    .widget-params {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.3rem;
+      margin-top: auto;
+      padding-top: 0.75rem;
+    }
+
+    .widget-params code {
+      font-size: 0.75rem;
+      color: var(--ink-faint);
+      background: var(--bg);
+      border: 1px solid var(--hairline);
+      border-radius: 4px;
+      padding: 0.05rem 0.3rem;
+    }
+
+    .foot { max-width: 34rem; color: var(--ink-muted); font-size: 0.9rem; }
   </style>
 </head>
 <body>
@@ -21,125 +92,128 @@
     <p class="lede">
       Small oEmbed-enabled widgets, built to embed cleanly into
       Mimir — drop a bare widget URL into a block and it renders as a live
-      card, not just a link.
+      card, not just a link. Each one reads its whole configuration from the
+      query string, so the URL is the entire installation.
     </p>
 
-    <div class="widget-list">
-      <div class="widget-entry">
-        <h2>Countdown</h2>
+    <div class="widget-grid">
+      <div class="widget-card">
+        <h2><a href="/countdown?date=2027-01-01T00:00:00Z&label=New%20Year">Countdown</a></h2>
+        <p>Counts down to a moment, under a label of your choosing.</p>
+        <p class="widget-params"><code>?date=</code><code>?label=</code></p>
+      </div>
+
+      <div class="widget-card">
+        <h2><a href="/timer?presets=1,3,5,10">Timer</a></h2>
         <p>
-          <a href="/countdown?date=2027-01-01T00:00:00Z&label=New%20Year">Live example</a>
-          — pass <code>?date=</code> (ISO 8601) and <code>?label=</code>.
+          An Apple Watch-style countdown: tap a preset or type your own
+          duration, and it rings a bell at zero. <code>45s</code>,
+          <code>1:30</code>, <code>2h</code> and <code>1h09m</code> all parse.
+        </p>
+        <p class="widget-params"><code>?presets=</code></p>
+      </div>
+
+      <div class="widget-card">
+        <h2><a href="/pomodoro?work=25&rest=5">Pomodoro</a></h2>
+        <p>Work and rest cycles, in minutes, with a start-stop clock.</p>
+        <p class="widget-params"><code>?work=</code><code>?rest=</code></p>
+      </div>
+
+      <div class="widget-card">
+        <h2><a href="/weather?lat=52.37&lon=4.89&label=Amsterdam">Weather</a></h2>
+        <p>
+          The coming hours at one spot — temperature, rain chance and a
+          condition icon — from
+          <a href="https://open-meteo.com/">Open-Meteo</a>. Shows as many
+          columns as the embed's width comfortably fits.
+        </p>
+        <p class="widget-params"><code>?lat=</code><code>?lon=</code><code>?label=</code></p>
+      </div>
+
+      <div class="widget-card">
+        <h2><a href="/holidays?country=NL&n=4">Public Holidays</a></h2>
+        <p>
+          Upcoming public holidays for a country, counting down to the next
+          one, from <a href="https://date.nager.at/">Nager.Date</a>. Pass a
+          subdivision like <code>DE-BY</code> to drop the holidays your own
+          region doesn't take off.
+        </p>
+        <p class="widget-params">
+          <code>?country=</code><code>?county=</code><code>?n=</code><code>?en=</code><code>?label=</code>
         </p>
       </div>
-      <div class="widget-entry">
-        <h2>Pomodoro</h2>
+
+      <div class="widget-card">
+        <h2><span class="no-link">Departures</span></h2>
         <p>
-          <a href="/pomodoro?work=25&rest=5">Live example</a>
-          — pass <code>?work=</code> and <code>?rest=</code> in minutes.
+          A live Dutch Railways board for one route: times, delays, platforms
+          and transfers, refreshed every minute. Needs your own free key from
+          the <a href="https://apiportal.ns.nl/">NS API portal</a>, which
+          travels in the URL — so treat a note holding one as holding the key.
+        </p>
+        <p class="widget-params">
+          <code>?from=</code><code>?to=</code><code>?key=</code><code>?at=</code><code>?arrive=</code><code>?n=</code>
         </p>
       </div>
-      <div class="widget-entry">
-        <h2>Timer</h2>
+
+      <div class="widget-card">
+        <h2><a href="/fx?from=EUR&to=USD&amount=100">Currency</a></h2>
         <p>
-          <a href="/timer?presets=1,3,5,10">Live example</a>
-          — an Apple Watch-style countdown: tap a preset or type your own
-          duration, and it rings a bell when it hits zero. Pass
-          <code>?presets=</code> as a comma-separated list. Bare numbers are
-          minutes; <code>45s</code>, <code>1:30</code>, <code>1:30:00</code>,
-          <code>2h</code> and compound units like <code>1h09m</code> all
-          work too, in the presets and in the custom field alike.
+          Converts one currency into another over a 30-day sparkline. The
+          amount is editable in place and the arrows flip the direction,
+          neither one refetching. Rates from
+          <a href="https://frankfurter.dev/">Frankfurter</a>.
         </p>
+        <p class="widget-params"><code>?from=</code><code>?to=</code><code>?amount=</code></p>
       </div>
-      <div class="widget-entry">
-        <h2>Weather</h2>
+
+      <div class="widget-card">
+        <h2><a href="/color?c=%23663399">Color</a></h2>
         <p>
-          <a href="/weather?lat=52.37&lon=4.89&label=Amsterdam">Live example</a>
-          — pass <code>?lat=</code> and <code>?lon=</code>, and optionally
-          <code>?label=</code>. Shows the coming hours (temperature,
-          precipitation chance, condition icon) via
-          <a href="https://open-meteo.com/">Open-Meteo</a>.
+          One colour read back in nine CSS syntaxes — hex, <code>rgb()</code>,
+          <code>oklch()</code>, <code>lab()</code> and the rest — each a click
+          away from the clipboard. Colours wider than sRGB stay intact, with
+          the rows that can't hold them marked as clipped.
         </p>
+        <p class="widget-params"><code>?c=</code></p>
       </div>
-      <div class="widget-entry">
-        <h2>Color</h2>
+
+      <div class="widget-card">
+        <h2><a href="/calc">Calculator</a></h2>
         <p>
-          <a href="/color?c=%23663399">Live example</a>
-          — paste a colour in any CSS syntax and read it back in every other:
-          hex, <code>rgb()</code>, <code>hsl()</code>, <code>hwb()</code>,
-          <code>oklch()</code>, <code>oklab()</code>, <code>lch()</code>,
-          <code>lab()</code> and <code>color(display-p3 …)</code>, each a click
-          away from the clipboard. Pass <code>?c=</code> (url-encode the
-          <code>#</code> as <code>%23</code>). A colour wider than sRGB — an
-          <code>oklch()</code> outside the box — is kept intact, with the rows
-          that can't hold it marked as clipped.
-        </p>
-      </div>
-      <div class="widget-entry">
-        <h2>Currency</h2>
-        <p>
-          <a href="/fx?from=EUR&to=USD&amount=100">Live example</a>
-          — converts one currency into another and sketches the last 30 days
-          as a sparkline. Pass <code>?from=</code>, <code>?to=</code> (ISO
-          codes) and <code>?amount=</code>. The amount is editable in place
-          and the arrows flip the direction, both without refetching. Rates
-          come from <a href="https://frankfurter.dev/">Frankfurter</a>, which
-          blends 84 central-bank sources and needs no key.
-        </p>
-      </div>
-      <div class="widget-entry">
-        <h2>Departures</h2>
-        <p>
-          <code>/train?from=Amsterdam%20Centraal&amp;to=Utrecht%20Centraal&amp;at=08:15&amp;key=YOUR_KEY</code>
-          — a live Dutch Railways departure board for one route: departure and
-          arrival times, delays, platforms and transfers, refreshed every
-          minute. Pass <code>?from=</code> and <code>?to=</code> (station name
-          or code), <code>?at=</code> (<code>HH:MM</code>, omit for the next
-          departures), <code>?arrive=1</code> to treat that time as an arrival
-          deadline, <code>?n=</code> (1–6 departures) and <code>?label=</code>.
-          Times are always Dutch local time, whoever is reading. Bring your own
-          free key from the
-          <a href="https://apiportal.ns.nl/">NS API portal</a> —
-          it travels in the URL, so treat any note holding one as holding the
-          key itself.
-        </p>
-      </div>
-      <div class="widget-entry">
-        <h2>Calculator</h2>
-        <p>
-          <a href="/calc">Live example</a>
-          — a plaintext calculator: type an expression ending in
-          <code>=</code> or <code>:</code> and press Enter to fill in the
-          result, e.g. <code>1 + 1 =</code>. Variables persist across
+          A plaintext calculator: type an expression ending in <code>=</code>
+          and press Enter to fill in the result. Variables persist across
           lines. Ported from
           <a href="https://github.com/mofosyne/QuickMathJS">QuickMathJS</a>.
         </p>
+        <p class="widget-params"><code>no parameters</code></p>
       </div>
-      <div class="widget-entry">
-        <h2>Hike</h2>
+
+      <div class="widget-card">
+        <h2><a href="/gpx">Hike</a></h2>
         <p>
-          <a href="/gpx">Build one from a GPX file</a>
-          — draws a recorded hike on a map. The whole track is compressed into
-          the URL's <code>?t=</code> parameter, so nothing is uploaded and
-          nothing is stored server-side: the note holding the link holds the
-          data. Basemap tiles are proxied through this site, so the tile server
-          never sees who is looking at your route. Also takes
-          <code>?label=</code>, <code>?km=</code>, <code>?g=</code> (metres
-          climbed) and <code>?d=</code> (minutes).
+          A recorded GPX track drawn over a basemap, with the whole track
+          compressed into the URL: nothing uploaded, nothing stored, the note
+          holds the data. Tiles are proxied here, so the tile server never
+          sees who is looking. The link builds one from a
+          <code>.gpx</code> file.
+        </p>
+        <p class="widget-params">
+          <code>?t=</code><code>?label=</code><code>?km=</code><code>?g=</code><code>?d=</code>
         </p>
       </div>
-      <div class="widget-entry">
-        <h2>Dummy Outline</h2>
+
+      <div class="widget-card">
+        <h2><a href="/dummy?blocks=12&depth=2">Dummy Outline</a></h2>
         <p>
-          <a href="/dummy?blocks=12&depth=2">Live example</a>
-          — generates dash-prefixed outline blocks (two spaces per level of
-          indent) from public-domain literature, with a copy button. Pass
-          <code>?blocks=</code> (1–200) and <code>?depth=</code> (0–5).
+          Dash-prefixed outline blocks, two spaces per level of indent, from
+          public-domain literature — with a copy button.
         </p>
+        <p class="widget-params"><code>?blocks=</code><code>?depth=</code></p>
       </div>
     </div>
 
-    <p>
+    <p class="foot">
       Want to build your own widget that embeds just as well? Read
       <a href="https://github.com/Geffreyvanderbos/mimir-widgets/blob/main/SKILL.md">SKILL.md</a>
       — it's written so you can hand it straight to an LLM and get a
