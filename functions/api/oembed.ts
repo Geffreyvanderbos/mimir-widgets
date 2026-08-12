@@ -5,7 +5,9 @@
 // (a literal height alongside a non-pixel width means "any width, this
 // tall") — the same shape Spotify's own oEmbed response uses.
 interface Widget {
-  height: number;
+  // A function for the one widget whose card grows with a parameter — /train
+  // renders however many departures ?n= asks for.
+  height: number | ((target: URL) => number);
   title: (target: URL) => string;
 }
 
@@ -26,6 +28,17 @@ const WIDGETS: Record<string, Widget> = {
   '/color': {
     height: 320,
     title: (target) => `Color: ${target.searchParams.get('c') ?? '#006fdc'}`,
+  },
+  '/train': {
+    // Label row plus footer, then one line per departure. Must stay in step
+    // with src/train.ts's own clamp on ?n=.
+    height: (target) => {
+      const requested = Math.round(Number(target.searchParams.get('n'))) || 3;
+      return 120 + Math.min(Math.max(requested, 1), 6) * 26;
+    },
+    title: (target) =>
+      `Departures: ${target.searchParams.get('from') ?? '?'} → ` +
+      `${target.searchParams.get('to') ?? '?'}`,
   },
   '/fx': {
     height: 180,
@@ -65,7 +78,7 @@ export const onRequest: PagesFunction = async (context) => {
     return new Response('Unknown widget path', { status: 404 });
   }
 
-  const { height } = widget;
+  const height = typeof widget.height === 'function' ? widget.height(target) : widget.height;
   const title = widget.title(target);
 
   const iframeSrc = escapeAttr(target.toString());

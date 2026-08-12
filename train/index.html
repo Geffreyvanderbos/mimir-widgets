@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Departures — Mimir Widgets</title>
+  <link rel="stylesheet" href="/src/style.css" />
+</head>
+<body>
+  <div id="app" class="widget-content train-content">
+    <p class="widget-label" id="train-label">Loading…</p>
+    <div class="train-body" id="train-body"></div>
+    <p class="train-foot">
+      <span id="train-updated"></span>
+      <a href="https://apiportal.ns.nl/" target="_blank" rel="noopener">NS</a>
+    </p>
+  </div>
+  <script type="module" src="/src/train.ts"></script>
+</body>
+</html>

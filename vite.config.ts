@@ -17,6 +17,7 @@ export default defineConfig({
         gpx: entry('./gpx/index.html'),
         fx: entry('./fx/index.html'),
         color: entry('./color/index.html'),
+        train: entry('./train/index.html'),
       },
     },
   },

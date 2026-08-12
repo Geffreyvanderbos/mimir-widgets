@@ -1206,3 +1206,116 @@ input.fx-amount:focus {
 .fx-foot a:hover {
   color: var(--accent);
 }
+
+.train-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+/* Times and delays get fixed columns so the arrows line up down the card even
+   when only some trips are running late. */
+.train-row {
+  display: grid;
+  grid-template-columns: auto 1.6rem auto auto 1.6rem minmax(0, 1fr);
+  align-items: baseline;
+  gap: 0 0.35rem;
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+.train-row.cancelled .train-time {
+  text-decoration: line-through;
+  color: var(--ink-faint);
+}
+
+.train-time {
+  font-variant-numeric: tabular-nums;
+}
+
+.train-delay {
+  font-size: 0.8rem;
+  font-variant-numeric: tabular-nums;
+  color: #d1342f;
+}
+
+@media (prefers-color-scheme: dark) {
+  .train-delay {
+    color: #ff6961;
+  }
+}
+
+.train-arrow {
+  color: var(--ink-faint);
+}
+
+.train-meta {
+  display: flex;
+  align-items: baseline;
+  gap: 0.3rem;
+  min-width: 0;
+  overflow: hidden;
+  font-size: 0.8rem;
+  color: var(--ink-muted);
+  white-space: nowrap;
+}
+
+.train-cat {
+  font-weight: 600;
+  color: var(--accent);
+}
+
+/* Platform numbers are alphanumeric ("4b"), so the chip is what makes them
+   read as a platform rather than as part of the station name next to it. */
+.train-track {
+  padding: 0 0.3rem;
+  border-radius: 4px;
+  background: var(--hairline);
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+
+.train-track.changed {
+  background: #f5a623;
+  color: #1b1b1b;
+}
+
+.train-via {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.train-dot {
+  color: var(--ink-faint);
+}
+
+.train-cancelled {
+  color: #d1342f;
+}
+
+.train-message {
+  margin: 0;
+  color: var(--ink-muted);
+}
+
+.train-foot {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin: 0.85rem 0 0;
+  padding-top: 0.6rem;
+  border-top: 1px solid var(--hairline);
+  font-size: 0.78rem;
+  color: var(--ink-faint);
+}
+
+.train-foot a {
+  color: var(--ink-faint);
+  text-decoration: none;
+}
+
+.train-foot a:hover {
+  color: var(--accent);
+}
