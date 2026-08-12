@@ -175,9 +175,11 @@
           One colour read back in nine CSS syntaxes — hex, <code>rgb()</code>,
           <code>oklch()</code>, <code>lab()</code> and the rest — each a click
           away from the clipboard. Colours wider than sRGB stay intact, with
-          the rows that can't hold them marked as clipped. Write
-          <code>?c=%23663399</code> or just <code>?c=#663399</code> — an
-          unencoded hash lands in the URL fragment, which is read too.
+          the rows that can't hold them marked as clipped. The hash is
+          optional and best left off — <code>?c=663399</code> — since a
+          literal <code>#</code> starts a URL fragment, which a consumer may
+          strip before the embed ever loads. <code>?c=%23663399</code> works
+          too.
         </p>
         <p class="widget-params"><code>?c=</code></p>
       </div>
