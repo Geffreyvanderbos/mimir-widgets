@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Color Converter — Mimir Widgets</title>
+  <link rel="stylesheet" href="/src/style.css" />
+</head>
+<body>
+  <div class="color-content">
+    <div class="color-swatch" id="color-swatch">
+      <div class="color-swatch-fill" id="color-swatch-fill"></div>
+      <input
+        id="color-picker"
+        class="color-picker"
+        type="color"
+        aria-label="Pick a colour"
+      />
+      <div class="color-swatch-body">
+        <input
+          id="color-input"
+          class="color-input"
+          spellcheck="false"
+          autocomplete="off"
+          autocapitalize="off"
+          autocorrect="off"
+          placeholder="Paste any colour"
+          aria-label="Colour in any CSS syntax"
+        />
+        <p class="color-meta">
+          <span id="color-name"></span>
+          <span id="color-gamut" class="color-gamut" hidden></span>
+        </p>
+      </div>
+    </div>
+    <div class="color-grid" id="color-grid"></div>
+  </div>
+  <script type="module" src="/src/color.ts"></script>
+</body>
+</html>

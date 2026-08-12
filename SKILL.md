@@ -201,6 +201,22 @@ never load again to prune itself.
   [Open-Meteo](https://open-meteo.com/) API (no key required), showing as
   many columns as comfortably fit the embed's actual width. Fixed 180px
   height.
+- `color/index.html` + `src/color.ts` — reads `?c=`, a colour in any CSS
+  syntax, and shows it in nine others, each row a click away from the
+  clipboard. Fixed 320px height; the rows are a `repeat(auto-fit, minmax(…))`
+  grid that folds to two columns when the embed is wide enough, and the swatch
+  above them takes whatever height that leaves, so the card fills its frame at
+  any width without measuring anything (§6). `src/color-space.ts` is the
+  conversion maths — CSS Color 4 matrices written out rather than pulled from
+  a library, since a colour library is far larger than the widget. Its
+  canonical form is deliberately *unclamped* sRGB: `oklch(0.9 0.4 150)` is a
+  valid input that no hex can represent, so clamping on the way in would make
+  the widget echo back a colour the reader never typed. Nothing is clipped
+  until an sRGB-bound string is serialised, and those rows are marked when it
+  happens. The swatch is the one surface here that isn't `--bg`, so its ink is
+  chosen from the colour's own WCAG relative luminance instead of the token
+  set, and a conic-gradient checkerboard sits under it so an alpha below 1
+  reads as transparency.
 - `fx/index.html` + `src/fx.ts` — reads `?from=`, `?to=` and `?amount=`, and
   converts one currency into another over a 30-day sparkline, from the
   [Frankfurter](https://frankfurter.dev/) API — no key, and it answers with

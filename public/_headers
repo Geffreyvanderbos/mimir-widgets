@@ -34,3 +34,7 @@
   ! X-Frame-Options
 /fx/*
   ! X-Frame-Options
+/color
+  ! X-Frame-Options
+/color/*
+  ! X-Frame-Options
