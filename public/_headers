@@ -38,3 +38,7 @@
   ! X-Frame-Options
 /color/*
   ! X-Frame-Options
+/train
+  ! X-Frame-Options
+/train/*
+  ! X-Frame-Options

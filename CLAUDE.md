@@ -76,6 +76,25 @@ keyed provider's token could later live server-side instead of in a widget URL.
 It bounds zoom and x/y to its own tile grid specifically so it can't be used as
 a general-purpose image proxy.
 
+**The train widget carries someone else's API key in its URL, on purpose.**
+`/train` is a departure board for one NS route, and the NS Reisinformatie API
+needs a per-user subscription key. Keeping a key server-side would make this
+*Geffrey's* departure board on Geffrey's quota — so `?key=` is a parameter like
+any other, and the widget is route-agnostic until someone fills in their own.
+The trade is real and worth stating plainly: the key is visible to anyone who
+can read the note, it rides along in the discovery `<link>` the middleware
+injects and in the `?url=` of the oEmbed request, and it is not a secret once
+embedded. NS keys are free, unscoped to an account's data, and revocable, which
+is what makes that trade acceptable here; it would not be for a keyed API that
+can spend money or read personal data. Never commit a real key to this repo —
+the landing page shows `key=YOUR_KEY`.
+
+Two smaller notes on it. The gateway sends `access-control-allow-origin: *`, so
+unlike the hike tiles this one needs no proxy — the browser calls NS directly.
+And `/train` is the first widget whose height depends on a parameter (`?n=`),
+which is why `WIDGET_HEIGHTS`' `height` in `functions/api/oembed.ts` now also
+takes a function of the target URL.
+
 ## Conventions
 
 - No comments except where they explain non-obvious *why* — never restate

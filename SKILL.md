@@ -250,6 +250,23 @@ never load again to prune itself.
   builder that turns a `.gpx` file into such a URL entirely in the browser —
   deliberately *not* in `WIDGET_PATHS`, since it's a normal page on the site
   rather than an embed.
+- `train/index.html` + `src/train.ts` — reads `?from=`, `?to=`, `?key=`, `?at=`,
+  `?arrive=` and `?n=`, and renders a live Dutch Railways departure board for
+  one route from the [NS Reisinformatie](https://apiportal.ns.nl/) API,
+  refreshed every minute. Two things here are worth copying. First, it is the
+  one widget whose card grows with a parameter, so its `height` in
+  `functions/api/oembed.ts` is a *function* of the target URL rather than a
+  constant — still a fixed height per URL, which is all §4 requires, just not
+  the same fixed height for every URL. Second, the API needs a per-user key,
+  and it rides in the query string like any other parameter: a key kept
+  server-side would make the widget the *host's* departure board on the host's
+  quota, rather than an empty frame anyone can point at their own commute. That
+  trade only works because an NS key is free, revocable and reads nothing
+  personal — the key is visible to everyone who can see the note, and to the
+  oEmbed endpoint, so a credential that can spend money or read private data
+  belongs behind a Function instead (§5). Times are rendered in Dutch local
+  time whatever zone the reader is in, by slicing the wall clock straight out
+  of the API's own offset-stamped timestamps rather than converting them.
 - `functions/api/tiles/[z]/[x]/[y].ts` — same-origin basemap tile proxy for the
   hike widget, so the embed makes no third-party requests at all.
 - `functions/api/oembed.ts` — the oEmbed JSON endpoint all widgets share.
