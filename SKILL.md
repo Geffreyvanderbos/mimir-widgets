@@ -201,6 +201,18 @@ never load again to prune itself.
   [Open-Meteo](https://open-meteo.com/) API (no key required), showing as
   many columns as comfortably fit the embed's actual width. Fixed 180px
   height.
+- `fx/index.html` + `src/fx.ts` — reads `?from=`, `?to=` and `?amount=`, and
+  converts one currency into another over a 30-day sparkline, from the
+  [Frankfurter](https://frankfurter.dev/) API — no key, and it answers with
+  `access-control-allow-origin: *`, so it's fetched client-side like the
+  weather widget rather than proxied. Fixed 180px height. One request serves
+  the whole card: the range endpoint's last point *is* the current rate, and
+  both interactions — editing the amount, and the swap button, which inverts
+  every point — are arithmetic on the series already in hand, so nothing after
+  load touches the network. The sparkline is an SVG with
+  `preserveAspectRatio="none"` and `vector-effect="non-scaling-stroke"`, which
+  fills the embed's real width without a resize listener and without a stroke
+  that stretches with it.
 - `dummy/index.html` + `src/dummy.ts` — reads `?blocks=` and `?depth=`,
   generates a dash-prefixed outline (two spaces per indent level) from a
   bundled public-domain corpus, with a copy button. Fixed 300px height; the

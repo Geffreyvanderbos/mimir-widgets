@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Currency Converter — Mimir Widgets</title>
+  <link rel="stylesheet" href="/src/style.css" />
+</head>
+<body>
+  <div id="app" class="widget-content fx-content">
+    <div class="fx-row">
+      <label class="fx-side" for="fx-amount">
+        <input
+          id="fx-amount"
+          class="fx-amount"
+          inputmode="decimal"
+          autocomplete="off"
+          spellcheck="false"
+        />
+        <span class="fx-code" id="fx-from"></span>
+      </label>
+      <button id="fx-swap" class="fx-swap" type="button" aria-label="Swap currencies">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"
+             stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M4 9h15l-3.5-3.5M20 15H5l3.5 3.5" />
+        </svg>
+      </button>
+      <div class="fx-side fx-side-out">
+        <span class="fx-amount fx-result" id="fx-result">—</span>
+        <span class="fx-code" id="fx-to"></span>
+      </div>
+    </div>
+    <svg class="fx-spark" viewBox="0 0 100 30" preserveAspectRatio="none" aria-hidden="true">
+      <path id="fx-spark-path" fill="none" stroke="currentColor" stroke-width="1.5"
+            stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke" />
+    </svg>
+    <p class="fx-foot">
+      <span id="fx-note" class="fx-note">Loading…</span>
+      <a href="https://frankfurter.dev/" target="_blank" rel="noopener">frankfurter.dev</a>
+    </p>
+  </div>
+  <script type="module" src="/src/fx.ts"></script>
+</body>
+</html>
