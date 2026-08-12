@@ -30,3 +30,7 @@
   ! X-Frame-Options
 /hike/*
   ! X-Frame-Options
+/fx
+  ! X-Frame-Options
+/fx/*
+  ! X-Frame-Options

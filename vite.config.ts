@@ -15,6 +15,7 @@ export default defineConfig({
         timer: entry('./timer/index.html'),
         hike: entry('./hike/index.html'),
         gpx: entry('./gpx/index.html'),
+        fx: entry('./fx/index.html'),
       },
     },
   },

@@ -5,7 +5,16 @@
 // build-time <link> baked into the HTML file.
 // Note the absence of '/gpx': that's the builder page for /hike URLs, a normal
 // page on this site rather than an embeddable widget.
-const WIDGET_PATHS = ['/countdown', '/pomodoro', '/weather', '/calc', '/dummy', '/timer', '/hike'];
+const WIDGET_PATHS = [
+  '/countdown',
+  '/pomodoro',
+  '/weather',
+  '/calc',
+  '/dummy',
+  '/timer',
+  '/hike',
+  '/fx',
+];
 
 export const onRequest: PagesFunction = async (context) => {
   const { request, next } = context;

@@ -23,6 +23,12 @@ const WIDGETS: Record<string, Widget> = {
     height: 320,
     title: (target) => `Hike: ${target.searchParams.get('label') ?? 'Map'}`,
   },
+  '/fx': {
+    height: 180,
+    title: (target) =>
+      `${target.searchParams.get('from')?.toUpperCase() ?? 'EUR'} → ` +
+      `${target.searchParams.get('to')?.toUpperCase() ?? 'USD'}`,
+  },
 };
 
 function escapeAttr(value: string): string {
