@@ -248,10 +248,47 @@ body {
 
 .timer-custom {
   display: flex;
-  align-items: center;
+  flex-direction: column;
   gap: 0.4rem;
   width: 100%;
   max-width: 320px;
+}
+
+.timer-custom-row {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  width: 100%;
+}
+
+/* The unit keys, not decoration: `inputmode="numeric"` is right for a field
+   that is mostly digits, but a phone's numeric pad has no letters at all, so
+   without these the whole "45s"/"1h09m" grammar is unreachable on a phone. */
+.timer-units {
+  display: flex;
+  gap: 0.3rem;
+}
+
+.timer-unit {
+  font: inherit;
+  font-size: 0.8rem;
+  line-height: 1.6;
+  min-width: 1.9rem;
+  padding: 0.15rem 0.4rem;
+  color: var(--ink-muted);
+  background: var(--bg-raised);
+  border: 1px solid var(--hairline);
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.timer-unit:hover {
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
+.timer-unit:active {
+  opacity: 0.75;
 }
 
 .timer-custom-input {

@@ -11,16 +11,23 @@
     <div class="timer-picker" id="timer-picker">
       <div class="timer-presets" id="timer-presets"></div>
       <form class="timer-custom" id="timer-custom">
-        <input
-          class="timer-custom-input"
-          id="timer-custom-input"
-          type="text"
-          inputmode="numeric"
-          autocomplete="off"
-          placeholder="Custom — 7, 1:30, 45s, 1h09m"
-          aria-label="Custom duration"
-        />
-        <button class="widget-button" type="submit">Start</button>
+        <div class="timer-custom-row">
+          <input
+            class="timer-custom-input"
+            id="timer-custom-input"
+            type="text"
+            inputmode="numeric"
+            autocomplete="off"
+            placeholder="Custom — 7, 1:30, 45s, 1h09m"
+            aria-label="Custom duration"
+          />
+          <button class="widget-button" type="submit">Start</button>
+        </div>
+        <div class="timer-units" id="timer-units">
+          <button class="timer-unit" type="button" data-unit="h" aria-label="Hours">h</button>
+          <button class="timer-unit" type="button" data-unit="m" aria-label="Minutes">m</button>
+          <button class="timer-unit" type="button" data-unit="s" aria-label="Seconds">s</button>
+        </div>
       </form>
     </div>
 

@@ -104,6 +104,7 @@ const pickerEl = document.getElementById('timer-picker')!;
 const presetsEl = document.getElementById('timer-presets')!;
 const customFormEl = document.getElementById('timer-custom') as HTMLFormElement;
 const customInputEl = document.getElementById('timer-custom-input') as HTMLInputElement;
+const unitsEl = document.getElementById('timer-units')!;
 const runningEl = document.getElementById('timer-running')!;
 const ringEl = document.getElementById('timer-ring-progress') as unknown as SVGCircleElement;
 const clockEl = document.getElementById('timer-clock')!;
@@ -363,6 +364,36 @@ customFormEl.addEventListener('submit', (event) => {
 });
 
 customInputEl.addEventListener('input', () => customInputEl.classList.remove('is-invalid'));
+
+// Replacing a trailing unit rather than stacking onto it puts "5m" one tap
+// from "5h"; a value ending in neither a digit nor a unit has nothing for a
+// unit to attach to, so the tap does nothing rather than making "m" alone.
+function applyUnit(unit: string) {
+  const value = customInputEl.value.trimEnd();
+  const last = value.slice(-1);
+  // "1:30" is already a complete duration in the other notation, and no
+  // suffix makes it a valid one — a key press must never turn something
+  // parseable into something that isn't.
+  if (value.includes(':')) return;
+  if (/[hms]/.test(last)) {
+    customInputEl.value = value.slice(0, -1) + unit;
+  } else if (/\d/.test(last)) {
+    customInputEl.value = value + unit;
+  }
+  customInputEl.classList.remove('is-invalid');
+  customInputEl.focus();
+}
+
+// Pressing a button moves focus off the input by default, which on a phone
+// closes the keypad mid-entry. Cancelling the pointer's default keeps the
+// caret where it is; `click` still fires afterwards, so the same handler
+// serves a tap, a mouse and Enter on a focused key.
+unitsEl.addEventListener('pointerdown', (event) => event.preventDefault());
+
+unitsEl.addEventListener('click', (event) => {
+  const key = (event.target as HTMLElement).closest<HTMLElement>('.timer-unit');
+  if (key?.dataset.unit) applyUnit(key.dataset.unit);
+});
 
 toggleEl.addEventListener('click', () => {
   running ? pause() : start();
