@@ -29,7 +29,9 @@ const WIDGETS: Record<string, Widget> = {
   },
   '/color': {
     height: 320,
-    title: (target) => `Color: ${target.searchParams.get('c') ?? '#006fdc'}`,
+    // `||`, not `??`: an unencoded `?c=#663399` arrives with `c` present but
+    // empty, since the `#` started the fragment.
+    title: (target) => `Color: ${target.searchParams.get('c') || '#006fdc'}`,
   },
   '/train': {
     // Label row plus footer, then one line per departure. Must stay in step

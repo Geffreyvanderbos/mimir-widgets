@@ -879,8 +879,13 @@ body {
  * it therefore can't come from the token set; it's picked in JS from the
  * colour's own luminance and flipped with .is-dark.
  */
+/* width, not just align-self: body centres its flex child, so without a width
+   this column shrinks to the widest row's max-content (~24rem) and sits inset
+   in a wider embed — the swatch stopping short of the panel edges, and the
+   grid never getting the room it needs to fold into two columns. */
 .color-content {
   align-self: stretch;
+  width: 100%;
   height: 100%;
   display: flex;
   flex-direction: column;
