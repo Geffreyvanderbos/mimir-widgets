@@ -92,8 +92,10 @@ the landing page shows `key=YOUR_KEY`.
 Two smaller notes on it. The gateway sends `access-control-allow-origin: *`, so
 unlike the hike tiles this one needs no proxy — the browser calls NS directly.
 And `/train` is the first widget whose height depends on a parameter (`?n=`),
-which is why `WIDGET_HEIGHTS`' `height` in `functions/api/oembed.ts` now also
-takes a function of the target URL.
+which is why `WIDGETS`' `height` in `functions/api/oembed.ts` now also takes a
+function of the target URL. A per-URL height still has to be a height the card
+actually fits inside, with slack for a wrapped label — `body` centres its
+content, so an underestimate clips the top and bottom alike.
 
 ## Conventions
 
