@@ -50,3 +50,7 @@
   ! X-Frame-Options
 /nearby/*
   ! X-Frame-Options
+/very
+  ! X-Frame-Options
+/very/*
+  ! X-Frame-Options

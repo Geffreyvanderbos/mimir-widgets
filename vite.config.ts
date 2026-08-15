@@ -20,6 +20,7 @@ export default defineConfig({
         train: entry('./train/index.html'),
         holidays: entry('./holidays/index.html'),
         nearby: entry('./nearby/index.html'),
+        very: entry('./very/index.html'),
       },
     },
   },

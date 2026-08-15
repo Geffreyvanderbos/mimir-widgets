@@ -64,6 +64,16 @@ const WIDGETS: Record<string, Widget> = {
     height: 420,
     title: (target) => `Nearby: ${target.searchParams.get('label') ?? 'Places'}`,
   },
+  // Field, a fixed-height results track, one line of footer — the track is
+  // what keeps this constant across a one-synonym hit and a six-row "did you
+  // mean", so the height never has to follow the lookup.
+  '/very': {
+    height: 250,
+    title: (target) => {
+      const word = target.searchParams.get('w')?.trim();
+      return word ? `Not "very ${word}"` : 'Very Dictionary';
+    },
+  },
   '/fx': {
     height: 180,
     title: (target) =>

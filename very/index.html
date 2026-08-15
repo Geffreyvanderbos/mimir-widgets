@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Very Dictionary — Mimir Widgets</title>
+  <link rel="stylesheet" href="/src/style.css" />
+</head>
+<body>
+  <div class="very-content">
+    <div class="very-field">
+      <span class="very-prefix" aria-hidden="true">very</span>
+      <input
+        id="very-input"
+        class="very-input"
+        spellcheck="false"
+        autocomplete="off"
+        autocapitalize="off"
+        autocorrect="off"
+        enterkeyhint="search"
+        placeholder="tired"
+        aria-label="An adjective you keep putting ‘very’ in front of"
+      />
+    </div>
+    <div class="very-results" id="very-results" role="region" aria-live="polite"></div>
+    <p class="very-foot" id="very-foot"></p>
+  </div>
+  <script type="module" src="/src/very.ts"></script>
+</body>
+</html>

@@ -311,6 +311,22 @@ never load again to prune itself.
   allows CORS, for the same privacy reason the tile proxy exists plus one more:
   a fallback chain across public instances only works server-side, since a
   refused preflight isn't a failure the page can retry past.
+- `very/index.html` + `src/very.ts` + `src/very-lookup.ts` + `src/very-words.ts`
+  (page, matching, word list) — reads `?w=`, an
+  adjective, and answers with the word that doesn't need a "very" in front of
+  it: one promoted recommendation plus its runners-up, each a click from the
+  clipboard. Fixed 250px height, and the one to read for **a lookup widget
+  whose answer varies in size**. The results region is a fixed-height scrolling
+  track, so a single synonym and a six-row "did you mean" occupy identical
+  space and the reported height never has to follow the query (§4) — the
+  alternative, a card that grows with its answer, has no way to tell the
+  consumer it grew. Two smaller generalisations: with no `?w=` at all it opens
+  on one fixed entry rather than an empty field, since a bare input reads as a
+  broken embed rather than an invitation (§6) — fixed and not random, because
+  the frame is rebuilt on every visit (§7) and a random default would show a
+  different card to every reader of the same note. And the field overrides
+  `?w=` in memory only, never writing back to the address bar, so the URL keeps
+  describing what a reload — or another reader of that note — will see.
 - `functions/api/tiles/[z]/[x]/[y].ts` — same-origin basemap tile proxy for the
   hike and nearby widgets, so those embeds make no third-party requests at all.
 - `functions/api/nearby.ts` — the Overpass query/fallback endpoint, which also

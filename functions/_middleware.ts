@@ -18,6 +18,7 @@ const WIDGET_PATHS = [
   '/train',
   '/holidays',
   '/nearby',
+  '/very',
 ];
 
 export const onRequest: PagesFunction = async (context) => {
