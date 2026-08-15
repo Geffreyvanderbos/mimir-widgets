@@ -110,7 +110,14 @@ export const onRequest: PagesFunction<Env> = async (context) => {
   if (!KEY_PATTERN.test(key)) return notFound();
   if (extension !== null && !EXTENSIONS.has(extension)) return notFound();
 
-  const object = await env.IMAGES.get(key);
+  // `head` for anything that doesn't stream bytes — the landing page needs only
+  // the dimensions in customMetadata, and a HEAD request by definition sends no
+  // body. A `get` there would pull the whole image out of R2 to serve a few
+  // hundred bytes of HTML.
+  const wantsBytes = extension !== null && request.method === 'GET';
+  const object: R2Object | R2ObjectBody | null = wantsBytes
+    ? await env.IMAGES.get(key)
+    : await env.IMAGES.head(key);
   if (object === null) return notFound();
 
   const width = Number(object.customMetadata?.width);
@@ -137,8 +144,9 @@ export const onRequest: PagesFunction<Env> = async (context) => {
   }
 
   // A fresh Response with an explicit header set, like the tile proxy — nothing
-  // from storage passes through to the browser unexamined.
-  return new Response(request.method === 'HEAD' ? null : object.body, {
+  // from storage passes through to the browser unexamined. `head` returns no
+  // body at all, which is exactly what a HEAD response needs.
+  return new Response(wantsBytes ? (object as R2ObjectBody).body : null, {
     status: 200,
     headers: {
       'content-type': contentType,
