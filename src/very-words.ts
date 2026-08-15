@@ -9,6 +9,13 @@ export interface Entry {
    * advice for the other.
    */
   sense?: string;
+  /**
+   * Reachable by typing it or by `?w=`, but never dealt out by the random
+   * pick — a paramless card opens on a word nobody asked for, inside someone
+   * else's notes. Looking a word up is not the same permission as putting it
+   * on screen unasked.
+   */
+  onRequest?: true;
 }
 
 export const ENTRIES: Entry[] = [
@@ -124,7 +131,7 @@ export const ENTRIES: Entry[] = [
   { word: 'honored', alts: ['privileged', 'humbled', 'exalted'] },
   { word: 'honoured', alts: ['privileged', 'humbled', 'exalted'] },
   { word: 'hopeful', alts: ['optimistic', 'buoyant', 'sanguine'] },
-  { word: 'horny', alts: ['aroused', 'lustful', 'libidinous'] },
+  { word: 'horny', onRequest: true, alts: ['aroused', 'lustful', 'libidinous'] },
   { word: 'hot', alts: ['sweltering', 'scorching', 'blistering'] },
   { word: 'huge', alts: ['colossal', 'gargantuan', 'mammoth'] },
   { word: 'hungry', alts: ['ravenous', 'famished', 'starving'] },

@@ -1,4 +1,4 @@
-import { headword, lookup } from './very-lookup';
+import { headword, lookup, sampleWord } from './very-lookup';
 import { ENTRIES, type Entry } from './very-words';
 
 const params = new URLSearchParams(location.search);
@@ -6,6 +6,7 @@ const params = new URLSearchParams(location.search);
 const inputEl = document.getElementById('very-input') as HTMLInputElement;
 const resultsEl = document.getElementById('very-results')!;
 const footEl = document.getElementById('very-foot')!;
+const shuffleEl = document.getElementById('very-shuffle') as HTMLButtonElement;
 
 const DEFAULT_FOOT = `${ENTRIES.length} entries · tap a word to copy it`;
 /** Shown when nothing at all matched — three headwords worth trying. */
@@ -136,7 +137,8 @@ function render() {
   if (key === '') {
     const message = document.createElement('p');
     message.className = 'very-message';
-    message.textContent = 'Type an adjective you keep saying “very” in front of.';
+    message.textContent =
+      'Type an adjective you keep saying “very” in front of — or shuffle for one.';
     resultsEl.append(message);
   } else if (hits.length > 0) {
     renderHits(hits);
@@ -181,18 +183,27 @@ document.addEventListener('keydown', (event) => {
   }
 });
 
-// An empty card reads as broken in a note, so a widget embedded without ?w=
-// opens on a real entry rather than a blank field (§6). Deliberately a fixed
-// word and not a random one: the iframe is destroyed and recreated on every
-// visit to the note (§7), so a random pick would show a different word each
-// time the same person came back, and a different one again to everyone else
-// reading the same note.
-const DEFAULT_WORD = 'tired';
+function shuffle() {
+  inputEl.value = sampleWord(Math.random(), headword(inputEl.value));
+  render();
+}
 
-// `very` is drawn beside the field, not inside it, so the parameter is peeled
-// of its own intensifier before it lands there — ?w=really+tired asks a real
-// question, and would otherwise render as "very really tired".
-inputEl.value = headword(params.get('w') ?? '') || DEFAULT_WORD;
+// Focus deliberately stays on the button rather than moving to the field: this
+// is the one control meant to be pressed repeatedly, and on a phone focusing
+// the input would throw the keyboard over the card between every word.
+shuffleEl.addEventListener('click', shuffle);
+
+// A widget embedded without ?w= deals a word at random on every load, so a
+// paramless embed is a word to learn rather than a blank field (§6). That the
+// frame is rebuilt on each visit (§7) is the *point* here — a URL carrying no
+// word never promised to show a particular one. A URL that does carry ?w= is
+// still stable, and the shuffle overrides it in memory only, never writing
+// back to the address bar.
+//
+// The parameter is peeled of its own intensifier before it lands in the field,
+// since `very` is drawn beside the field rather than inside it: ?w=really+tired
+// asks a real question, and would otherwise render as "very really tired".
+inputEl.value = headword(params.get('w') ?? '') || sampleWord(Math.random());
 footEl.textContent = DEFAULT_FOOT;
 render();
 
