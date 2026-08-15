@@ -2,3 +2,5 @@ node_modules/
 dist/
 .wrangler/
 .DS_Store
+# The local stand-in for Pages secrets (UPLOAD_TOKEN). Never commit it.
+.dev.vars

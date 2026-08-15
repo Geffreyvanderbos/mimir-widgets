@@ -21,3 +21,16 @@ npm run pages:dev    # full stack via wrangler, including the oEmbed Functions
 ```
 
 Deployed via Cloudflare Pages (GitHub integration) at `widgets.geff.re`.
+
+## The image host
+
+`/upload` is a private page that puts an image in R2 and hands back a URL that
+embeds as a real picture (oEmbed `type: "photo"`). It needs two things that are
+deliberately not in this repo:
+
+- an R2 bucket bound as `IMAGES` (declared in `wrangler.toml`, created in the
+  Cloudflare dashboard), and
+- `UPLOAD_TOKEN`, a Pages **secret** — `openssl rand -hex 32`.
+
+For local runs, put the same token in a `.dev.vars` file (gitignored) and start
+wrangler with `--r2 IMAGES` for a local bucket.

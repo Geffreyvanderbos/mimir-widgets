@@ -221,6 +221,58 @@ tired` are one question), a bounded Levenshtein catches a typo, and typing a
 it came from. `pretty` is why the peeling stops when one token is left — it's
 both an intensifier and a headword.
 
+**The image host is the first thing here with a server-side secret, and the
+first embed that isn't an iframe.** `/upload` takes a picture, `/i/<key>` gives
+it back, and the interesting part is that Mimir needs neither a widget page nor
+a height for it.
+
+oEmbed has a `photo` type: no `html`, just a `url` and the true `width`/
+`height`. Mimir's Rust side (`src-tauri/src/oembed.rs`) synthesises the `<img>`
+itself when a response has no markup, and `src/ui/embed.ts` sizes the panel from
+`aspect-ratio: width / height`. **The absence of `html` is load-bearing** — it's
+precisely what routes the response down that path, so adding one "for
+compatibility" would break it. And because the shape comes from the dimensions,
+an image with no recorded dimensions is a 404 rather than a photo response
+without them: a consumer that can't read a shape falls back to a 220px box
+waiting on a `postMessage` a plain `<img>` document will never send, which reads
+as broken rather than as an error. That's also why the upload endpoint refuses
+an upload with no `width`/`height` instead of storing it and sorting it out
+later.
+
+Two URLs per key, split by extension: `/i/<key>` is the HTML page carrying the
+discovery `<link>` (Mimir fetches *pages*, not images), `/i/<key>.jpg` is the
+bytes (Slack, Discord and an `<img src>` want those). One catch-all Function
+serves both so they can't disagree about which object they mean.
+
+Storage is **R2 via a binding**, not Scaleway or any S3 — `env.IMAGES.put(...)`
+against ~100 lines of hand-rolled SigV4 over Web Crypto, and one secret to keep
+out of a public repo instead of five. The bucket stays private; the Function is
+its only reader.
+
+The guards are worth keeping when this is edited, because a public repo means
+the threat model includes someone reading this source. The token is compared in
+**constant time** — a `===` on a secret is a timing oracle for a few lines'
+saving. A missing or short `UPLOAD_TOKEN` **fails closed**, since the opposite
+mistake is an open bucket and this one is only ever "I can't upload". The
+declared content-type is a *claim* from a client-supplied multipart part, so the
+**magic bytes are checked against it** — without that the bucket will serve an
+HTML document under `image/png`. **SVG is excluded on purpose**: it's a
+scriptable document that happens to draw a picture, and every output of this
+thing is a URL meant to be pasted into someone else's page. Keys come from
+`crypto.getRandomValues`, never the filename, which would make URLs guessable
+and leak what the picture is of.
+
+The resize is client-side, and does three jobs in one pass: a smaller file, the
+dimensions the oEmbed response needs without parsing a single file header, and
+**EXIF dropped — including GPS**, which is the right default when the output is
+a link that goes into a shared note. A GIF skips it entirely, since a canvas
+keeps one frame and would silently turn an animation into a still.
+
+Worth being plain about what this is *not*: `/i/<key>` is unlisted, not private.
+No auth on read, by design. Twelve random characters aren't enumerable, but
+anyone holding a link sees the image — fine for sharing a screenshot, wrong for
+anything genuinely sensitive.
+
 ## Conventions
 
 - No comments except where they explain non-obvious *why* — never restate

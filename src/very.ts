@@ -1,3 +1,4 @@
+import { copyToClipboard } from './clipboard';
 import { headword, lookup, sampleWord } from './very-lookup';
 import { ENTRIES, type Entry } from './very-words';
 
@@ -11,32 +12,6 @@ const shuffleEl = document.getElementById('very-shuffle') as HTMLButtonElement;
 const DEFAULT_FOOT = `${ENTRIES.length} entries · tap a word to copy it`;
 /** Shown when nothing at all matched — three headwords worth trying. */
 const NUDGE = ['tired', 'expensive', 'angry'];
-
-// Same three-step fallback as the color widget: the async Clipboard API can be
-// withheld from a cross-origin iframe by the consumer's Permissions-Policy,
-// execCommand isn't gated that way, and if both fail the text is left selected
-// so a manual ⌘C still works.
-async function copyToClipboard(text: string): Promise<boolean> {
-  try {
-    await navigator.clipboard.writeText(text);
-    return true;
-  } catch {
-    const scratch = document.createElement('textarea');
-    scratch.value = text;
-    scratch.setAttribute('readonly', '');
-    scratch.className = 'very-scratch';
-    document.body.append(scratch);
-    scratch.select();
-    try {
-      if (document.execCommand('copy')) return true;
-    } catch {
-      // Fall through to leaving the text selected.
-    } finally {
-      setTimeout(() => scratch.remove(), 0);
-    }
-    return false;
-  }
-}
 
 let footResetId: number | undefined;
 

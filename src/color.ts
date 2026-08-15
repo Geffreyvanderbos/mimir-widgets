@@ -1,3 +1,4 @@
+import { copyToClipboard } from './clipboard';
 import {
   type Color,
   clipToSrgb,
@@ -69,34 +70,6 @@ const rows: Row[] = FORMATS.map((format) => {
   gridEl.append(button);
   return { button, label, value, format };
 });
-
-// The async Clipboard API is the happy path, but this page runs as a
-// cross-origin iframe inside someone else's app, where a Permissions-Policy
-// that omits `clipboard-write` will reject the promise. The deprecated
-// execCommand path isn't gated that way, so it's kept as the fallback — and
-// if both fail, the text is left selected so a manual ⌘C still works.
-async function copyToClipboard(text: string): Promise<boolean> {
-  try {
-    await navigator.clipboard.writeText(text);
-    return true;
-  } catch {
-    const scratch = document.createElement('textarea');
-    scratch.value = text;
-    scratch.setAttribute('readonly', '');
-    scratch.className = 'color-scratch';
-    document.body.append(scratch);
-    scratch.select();
-    try {
-      if (document.execCommand('copy')) return true;
-    } catch {
-      // Fall through to leaving the text selected.
-    } finally {
-      // Keeping it around would leave a stray focusable element in the card.
-      setTimeout(() => scratch.remove(), 0);
-    }
-    return false;
-  }
-}
 
 let resetId: number | undefined;
 

@@ -331,6 +331,24 @@ never load again to prune itself.
   rotation without being hidden from lookup. And a `?w=` URL still renders
   exactly what it says: the field and the shuffle button override the parameter
   in memory only, never writing back to the address bar.
+- `functions/i/[[path]].ts` + `functions/api/upload.ts` + `upload/index.html` —
+  a private image host, and **the one thing here that is not an iframe widget at
+  all**. Read it if what you want to embed is a *picture* rather than a card.
+  oEmbed's `photo` type carries no `html` — just a `url` and the true
+  `width`/`height` — and a consumer with no markup to mount builds the `<img>`
+  itself, at the ratio those dimensions describe. So §4's "pick a fixed height
+  and report it" doesn't apply; the dimensions are the sizing channel, which
+  makes them mandatory rather than decorative. Omitting `html` is what selects
+  that path, so don't add one. An image whose dimensions aren't known is served
+  as a 404 rather than as a photo response missing them, since a consumer that
+  can't read a shape has to guess one. Two URLs per key, split by extension:
+  `/i/<key>` is an HTML page carrying the discovery `<link>` (§2 discovery
+  fetches pages, not images), `/i/<key>.jpg` is the bytes, for an `<img src>` or
+  a chat app that unfurls image URLs natively. Also the only route here behind a
+  secret: bearer token compared in constant time, failing closed when unset,
+  with the uploaded file's magic bytes checked against its claimed content-type
+  (that type is client-supplied, so it is a claim, not a fact) and SVG excluded
+  as a scriptable document rather than an image.
 - `functions/api/tiles/[z]/[x]/[y].ts` — same-origin basemap tile proxy for the
   hike and nearby widgets, so those embeds make no third-party requests at all.
 - `functions/api/nearby.ts` — the Overpass query/fallback endpoint, which also

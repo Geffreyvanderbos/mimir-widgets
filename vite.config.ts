@@ -21,6 +21,7 @@ export default defineConfig({
         holidays: entry('./holidays/index.html'),
         nearby: entry('./nearby/index.html'),
         very: entry('./very/index.html'),
+        upload: entry('./upload/index.html'),
       },
     },
   },

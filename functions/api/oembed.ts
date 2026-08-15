@@ -86,7 +86,56 @@ function escapeAttr(value: string): string {
   return value.replace(/&/g, '&amp;').replace(/"/g, '&quot;');
 }
 
-export const onRequest: PagesFunction = async (context) => {
+/*
+ * The one response here that isn't an iframe. `/i/<key>` is a stored image, and
+ * oEmbed has a type for exactly that — `photo`, which carries a bare image URL
+ * and its true dimensions instead of markup.
+ *
+ * The absence of `html` is load-bearing, not an omission: a consumer with no
+ * markup to mount is what makes it build the <img> itself, at the shape given
+ * by width/height, rather than dropping the response as unembeddable. Adding an
+ * `html` key "for compatibility" would route it back onto the markup path and
+ * undo the whole point.
+ *
+ * Which is also why an image with no recorded dimensions gets a 404 rather than
+ * a dimensionless photo response: a consumer that can't read a shape has to
+ * guess one, and a guessed shape is a letterboxed or cropped picture.
+ */
+const IMAGE_PATH = /^\/i\/([a-z0-9]{8,24})$/;
+
+async function photoResponse(target: URL, key: string, env: Env): Promise<Response> {
+  const object = await env.IMAGES.head(key);
+  if (object === null) return new Response('Unknown image', { status: 404 });
+
+  const width = Number(object.customMetadata?.width);
+  const height = Number(object.customMetadata?.height);
+  if (!Number.isInteger(width) || !Number.isInteger(height)) {
+    return new Response('Image has no recorded dimensions', { status: 404 });
+  }
+
+  const contentType = object.httpMetadata?.contentType ?? 'image/jpeg';
+  const extension = contentType.split('/')[1]?.replace('jpeg', 'jpg') ?? 'jpg';
+
+  return new Response(
+    JSON.stringify({
+      version: '1.0',
+      type: 'photo',
+      provider_name: 'Mimir Widgets',
+      provider_url: target.origin,
+      url: `${target.origin}/i/${key}.${extension}`,
+      width,
+      height,
+    }),
+    {
+      headers: {
+        'content-type': 'application/json',
+        'cache-control': 'public, max-age=3600',
+      },
+    },
+  );
+}
+
+export const onRequest: PagesFunction<Env> = async (context) => {
   const requestUrl = new URL(context.request.url);
   const targetParam = requestUrl.searchParams.get('url');
   if (!targetParam) {
@@ -107,6 +156,15 @@ export const onRequest: PagesFunction = async (context) => {
   }
 
   const targetPath = target.pathname.replace(/\/$/, '');
+
+  // Checked before the widget table: an image is described by its own response
+  // shape, and shares nothing with the fixed-height iframe every entry there
+  // produces.
+  const image = IMAGE_PATH.exec(targetPath);
+  if (image !== null) {
+    return photoResponse(target, image[1], context.env);
+  }
+
   const widget = WIDGETS[targetPath];
   if (widget === undefined) {
     return new Response('Unknown widget path', { status: 404 });
