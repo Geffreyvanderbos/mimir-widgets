@@ -1113,7 +1113,10 @@ body {
   color: var(--ink-faint);
 }
 
-.color-scratch {
+/* The off-screen textarea src/clipboard.ts falls back to when the async
+   Clipboard API is withheld from a cross-origin frame. Shared by every page
+   that copies, since the element is created by that one module. */
+.copy-scratch {
   position: fixed;
   top: -100vh;
   left: 0;
@@ -2011,13 +2014,6 @@ input.fx-amount:focus {
   text-overflow: ellipsis;
 }
 
-.very-scratch {
-  position: fixed;
-  top: -100vh;
-  left: 0;
-  opacity: 0;
-}
-
 /* Sits in the field row rather than under the results, since it's a way of
    asking the question, not one of the answers — and it stays out of the arrow-
    key walk through the results for the same reason. */
@@ -2052,4 +2048,34 @@ input.fx-amount:focus {
 .very-shuffle svg {
   width: 1.15rem;
   height: 1.15rem;
+}
+
+/* The image upload page (private — not an embed, and not linked from the
+   landing page). Reuses .gpx-page/.gpx-drop/.gpx-field wholesale; these are
+   only the parts that page has no equivalent of. */
+.upload-token {
+  margin-bottom: 1rem;
+}
+
+.upload-preview {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin: 1.25rem 0;
+}
+
+/* Bounded rather than fluid: the point is to confirm the right image at the
+   right proportions, and a 2000px-wide render would push the URLs — the thing
+   you actually came for — off the bottom of the screen. */
+.upload-preview img {
+  width: 120px;
+  height: 120px;
+  object-fit: cover;
+  border-radius: 8px;
+  background: var(--bg-raised);
+  border: 1px solid var(--hairline);
+}
+
+.upload-preview .gpx-summary {
+  margin: 0;
 }

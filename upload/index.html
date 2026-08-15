@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Image upload — Mimir Widgets</title>
+  <meta name="robots" content="noindex, nofollow" />
+  <link rel="stylesheet" href="/src/style.css" />
+</head>
+<body>
+  <div class="gpx-page">
+    <h1>Image upload</h1>
+    <p class="lede">
+      Drop in an image and get back a URL that renders as a real picture in a
+      Mimir note, and unfurls as one everywhere else. Needs the upload token —
+      unlike every other page here, this one writes to a server.
+    </p>
+
+    <label class="gpx-field gpx-field-wide upload-token">
+      <span>Upload token</span>
+      <input
+        type="password"
+        id="upload-token"
+        autocomplete="off"
+        spellcheck="false"
+        placeholder="paste once, remembered in this browser"
+      />
+    </label>
+
+    <label class="gpx-drop" id="upload-drop">
+      <input type="file" id="upload-file" accept="image/jpeg,image/png,image/gif,image/webp,image/avif" />
+      <span class="gpx-drop-title">Choose an image</span>
+      <span class="gpx-drop-hint">or drag one here — JPEG, PNG, GIF, WebP, AVIF</span>
+    </label>
+
+    <p class="gpx-error" id="upload-error" role="alert" hidden></p>
+    <p class="gpx-summary" id="upload-status" role="status"></p>
+
+    <div id="upload-result" hidden>
+      <div class="upload-preview">
+        <img id="upload-thumb" alt="" />
+        <p class="gpx-summary" id="upload-detail"></p>
+      </div>
+
+      <label class="gpx-field gpx-field-wide">
+        <span>For Mimir — an oEmbed page</span>
+        <input type="text" id="upload-page" readonly spellcheck="false" />
+      </label>
+      <label class="gpx-field gpx-field-wide">
+        <span>For everywhere else — the image itself</span>
+        <input type="text" id="upload-direct" readonly spellcheck="false" />
+      </label>
+
+      <div class="gpx-actions">
+        <button type="button" class="widget-button" id="upload-copy-page">Copy Mimir URL</button>
+        <button type="button" class="widget-button secondary" id="upload-copy-direct">Copy image URL</button>
+        <a class="widget-button secondary" id="upload-open" target="_blank" rel="noopener">Open</a>
+      </div>
+
+      <p class="gpx-hint">
+        Paste the first into a Mimir block and it becomes the picture, sized to
+        its real proportions. The second is the bytes — use it as an
+        <code>&lt;img src&gt;</code>, or paste it into Slack. Both are unlisted
+        rather than private: anyone holding the link can see the image.
+      </p>
+    </div>
+  </div>
+  <script type="module" src="/src/upload.ts"></script>
+</body>
+</html>

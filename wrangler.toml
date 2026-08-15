@@ -1,3 +1,11 @@
 name = "mimir-widgets"
 pages_build_output_dir = "dist"
 compatibility_date = "2025-01-01"
+
+# Backs /api/upload and /i/<key>. The bucket itself stays private — the only
+# reader is the Function, which is what keeps a bucket-wide public URL out of
+# the picture. UPLOAD_TOKEN is deliberately *not* here: it's a Pages secret,
+# since this file is in a public repo.
+[[r2_buckets]]
+binding = "IMAGES"
+bucket_name = "widget-images"
