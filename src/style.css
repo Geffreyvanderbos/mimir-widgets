@@ -1844,3 +1844,176 @@ input.fx-amount:focus {
   color: var(--accent);
   border-color: var(--accent);
 }
+
+/*
+ * Very Dictionary
+ */
+
+.very-content {
+  width: 100%;
+  padding: 0 1.25rem;
+}
+
+/* The prefix is the widget's whole premise, so it's set in the page's only
+   serif — a system stack, since a webfont would be a third-party request from
+   inside someone else's notes (SKILL.md §8). */
+.very-field {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  padding-bottom: 0.35rem;
+  border-bottom: 1px solid var(--hairline);
+}
+
+.very-prefix {
+  font-family: Georgia, 'Times New Roman', 'Iowan Old Style', serif;
+  font-style: italic;
+  font-size: 1.5rem;
+  line-height: 1.4;
+  color: var(--ink-faint);
+}
+
+.very-input {
+  flex: 1;
+  min-width: 0;
+  font: inherit;
+  font-size: 1.5rem;
+  line-height: 1.4;
+  color: var(--ink);
+  background: transparent;
+  border: none;
+  padding: 0;
+  outline: none;
+}
+
+.very-input::placeholder {
+  color: var(--ink-faint);
+}
+
+/* A fixed track, not a growable one: one synonym and six suggestions have to
+   occupy the same vertical space, since the frame's height is reported once
+   for every ?w= this widget will ever be given (§4). */
+.very-results {
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+  height: 8.5rem;
+  margin-top: 0.7rem;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.very-hit {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.35rem;
+}
+
+/* Which sense of an ambiguous headword this group answers — "of a price"
+   above dirt-cheap, "of a person" above stingy. */
+.very-sense,
+.very-sense-inline {
+  font-size: 0.75rem;
+  color: var(--ink-faint);
+}
+
+.very-sense {
+  margin: 0;
+  line-height: 1.2;
+}
+
+.very-word {
+  font: inherit;
+  font-size: 0.9rem;
+  color: var(--ink);
+  background: var(--bg-raised);
+  border: 1px solid var(--hairline);
+  border-radius: 999px;
+  padding: 0.1rem 0.6rem;
+  cursor: pointer;
+}
+
+.very-word:hover,
+.very-word:focus-visible {
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
+/* The one word the widget is actually recommending, sized like an answer
+   rather than an option. */
+.very-word.is-primary {
+  font-size: 1.75rem;
+  font-weight: 600;
+  line-height: 1.15;
+  color: var(--accent);
+  background: transparent;
+  border: none;
+  border-radius: 4px;
+  padding: 0;
+}
+
+.very-word.is-primary:hover,
+.very-word.is-primary:focus-visible {
+  text-decoration: underline;
+  text-underline-offset: 0.15em;
+}
+
+.very-alts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.very-suggests {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.1rem;
+}
+
+.very-suggest {
+  display: flex;
+  align-items: baseline;
+  gap: 0.4rem;
+  font: inherit;
+  font-size: 0.95rem;
+  color: var(--accent);
+  background: transparent;
+  border: none;
+  border-radius: 4px;
+  padding: 0.05rem 0;
+  cursor: pointer;
+  text-align: left;
+}
+
+.very-suggest:hover,
+.very-suggest:focus-visible {
+  text-decoration: underline;
+  text-underline-offset: 0.15em;
+}
+
+.very-message {
+  margin: 0;
+  font-size: 0.9rem;
+  line-height: 1.4;
+  color: var(--ink-muted);
+}
+
+/* One line, always: this is where copy feedback lands, and a wrapped second
+   line would push the results track past the frame. */
+.very-foot {
+  margin: 0.5rem 0 0;
+  font-size: 0.78rem;
+  color: var(--ink-faint);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.very-scratch {
+  position: fixed;
+  top: -100vh;
+  left: 0;
+  opacity: 0;
+}

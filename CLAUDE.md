@@ -177,6 +177,43 @@ places draw a category — a map pin, an accordion header, the metadata strip �
 and an icon defined in two files is one that eventually disagrees with itself.
 It also means a category added server-side arrives already drawable.
 
+**The very widget's hard part is the word list, not the code.** `/very` swaps an
+adjective for one that doesn't need "very" in front of it. The lookup is a
+hundred lines; `src/very-words.ts` is the widget. Three rules came out of
+curating it, and they hold for any hand-built lexicon.
+
+A *weak* synonym is unhelpful, a *wrong-sense* synonym gives bad advice, and
+they are not the same bug — "very smart → intelligent" merely wastes the
+lookup, "very sick → morbid" (preoccupied with death), "very cheap → stingy"
+(price versus character) and "very suspicious → apprehensive" (nervous versus
+distrustful) each send someone off with the wrong word. Sense errors are what
+the curation pass is for; weak entries mostly dissolve on their own once every
+headword carries three or four alternatives instead of one.
+
+Where a headword genuinely has two senses, it gets two entries with a `sense`
+label rather than one entry that quietly picks a side — `cheap`, `bright`,
+`busy`, `hard`, `hurt`, `mad`, `short`, `sweet`. That's also why the card
+renders a *list* of hits: the lookup returns every entry for the key, and both
+groups draw.
+
+A widget embedded without `?w=` still opens on a real entry rather than an
+empty field, and that entry is a *constant* — the first draft rolled a random
+one, which is wrong twice over here. SKILL.md §7's iframe is destroyed and
+recreated on every visit to a note, so a random default shows a different word
+each time the same person comes back and a different one again to everyone else
+reading the same note, which is the "URL is the entire installation" invariant
+going quietly. And an entry can be fine to look up yet wrong to volunteer —
+`horny` is in the list, correctly, and nothing should be putting it on screen
+unasked. A fixed default sidesteps that question; a random one would have to
+answer it.
+
+The rest is a matter of not making the reader spell things exactly: every
+intensifier is peeled off the front (`really tired`, `so tired`, and `very
+tired` are one question), a bounded Levenshtein catches a typo, and typing a
+*replacement* rather than the thing being replaced points back at the headword
+it came from. `pretty` is why the peeling stops when one token is left — it's
+both an intensifier and a headword.
+
 ## Conventions
 
 - No comments except where they explain non-obvious *why* — never restate
