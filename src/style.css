@@ -2017,3 +2017,39 @@ input.fx-amount:focus {
   left: 0;
   opacity: 0;
 }
+
+/* Sits in the field row rather than under the results, since it's a way of
+   asking the question, not one of the answers — and it stays out of the arrow-
+   key walk through the results for the same reason. */
+.very-shuffle {
+  flex: none;
+  /* The row is baseline-aligned for the serif "very" against the field; a
+     square button has no baseline worth aligning to. */
+  align-self: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  color: var(--ink-faint);
+  background: transparent;
+  border: 1px solid var(--hairline);
+  border-radius: 8px;
+  padding: 0;
+  cursor: pointer;
+}
+
+.very-shuffle:hover,
+.very-shuffle:focus-visible {
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
+.very-shuffle:active {
+  opacity: 0.7;
+}
+
+.very-shuffle svg {
+  width: 1.15rem;
+  height: 1.15rem;
+}

@@ -320,13 +320,17 @@ never load again to prune itself.
   track, so a single synonym and a six-row "did you mean" occupy identical
   space and the reported height never has to follow the query (§4) — the
   alternative, a card that grows with its answer, has no way to tell the
-  consumer it grew. Two smaller generalisations: with no `?w=` at all it opens
-  on one fixed entry rather than an empty field, since a bare input reads as a
-  broken embed rather than an invitation (§6) — fixed and not random, because
-  the frame is rebuilt on every visit (§7) and a random default would show a
-  different card to every reader of the same note. And the field overrides
-  `?w=` in memory only, never writing back to the address bar, so the URL keeps
-  describing what a reload — or another reader of that note — will see.
+  consumer it grew. Two smaller generalisations. With no `?w=` at all it deals
+  a random entry on each load — a bare input reads as a broken embed rather
+  than an invitation (§6), and since the frame is rebuilt on every visit (§7)
+  that paramless embed becomes a word-a-load to learn rather than a fixed card.
+  Deliberate, and the one case where a URL isn't a full description of what's
+  shown: a URL carrying no word never promised a particular one. It's also the
+  case that forces a distinction worth keeping — an entry can be fine to look
+  up yet wrong to volunteer unasked, so entries can be marked out of the random
+  rotation without being hidden from lookup. And a `?w=` URL still renders
+  exactly what it says: the field and the shuffle button override the parameter
+  in memory only, never writing back to the address bar.
 - `functions/api/tiles/[z]/[x]/[y].ts` — same-origin basemap tile proxy for the
   hike and nearby widgets, so those embeds make no third-party requests at all.
 - `functions/api/nearby.ts` — the Overpass query/fallback endpoint, which also

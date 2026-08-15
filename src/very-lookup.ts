@@ -70,6 +70,24 @@ function suggestionsFor(key: string): Entry[] {
     .slice(0, 6);
 }
 
+/**
+ * A word for the card to open on, or for the shuffle to land on. `avoid` keeps
+ * a shuffle from handing back the word already showing, which reads as a
+ * broken button rather than as a coincidence.
+ */
+export function sampleWord(random: number, avoid?: string): string {
+  // By word, not by entry: a two-sense headword is one word to learn, and
+  // drawing from the entry list would deal `cheap` twice as often as `cold`.
+  const offerable = [
+    ...new Set(
+      ENTRIES.filter((entry) => entry.onRequest !== true && entry.word !== avoid).map(
+        (entry) => entry.word,
+      ),
+    ),
+  ];
+  return offerable[Math.min(Math.floor(random * offerable.length), offerable.length - 1)];
+}
+
 export function lookup(raw: string): Match {
   const key = headword(raw);
   if (key === '') return { key, hits: [], suggestions: [] };

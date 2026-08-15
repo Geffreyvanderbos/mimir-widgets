@@ -192,20 +192,27 @@ headword carries three or four alternatives instead of one.
 
 Where a headword genuinely has two senses, it gets two entries with a `sense`
 label rather than one entry that quietly picks a side — `cheap`, `bright`,
-`busy`, `hard`, `hurt`, `mad`, `short`, `sweet`. That's also why the card
-renders a *list* of hits: the lookup returns every entry for the key, and both
+`busy`, `close`, `hard`, `hurt`, `mad`, `short`, `sweet`. That's also why the
+card renders a *list* of hits: the lookup returns every entry for the key, and both
 groups draw.
 
-A widget embedded without `?w=` still opens on a real entry rather than an
-empty field, and that entry is a *constant* — the first draft rolled a random
-one, which is wrong twice over here. SKILL.md §7's iframe is destroyed and
-recreated on every visit to a note, so a random default shows a different word
-each time the same person comes back and a different one again to everyone else
-reading the same note, which is the "URL is the entire installation" invariant
-going quietly. And an entry can be fine to look up yet wrong to volunteer —
-`horny` is in the list, correctly, and nothing should be putting it on screen
-unasked. A fixed default sidesteps that question; a random one would have to
-answer it.
+A widget embedded without `?w=` deals a random entry on every load, and there
+is a line to draw carefully there. Everywhere else in this repo a URL fully
+describes what the embed shows, and SKILL.md §7's iframe is rebuilt on every
+visit to a note — so a paramless `/very` genuinely does show a different word to
+every reader, and to the same reader twice. That's the intent rather than a
+lapse: a URL that carries no word never promised a particular one, and the point
+of the paramless embed is to learn a word you didn't ask for. A `?w=` URL still
+renders exactly what it says, and the shuffle button overrides it in memory
+only, like `/nearby`'s "look around here".
+
+What a random default *does* force is a distinction worth carrying to any widget
+with one: an entry can be fine to look up yet wrong to volunteer. `horny`
+belongs in the list — someone will type it — and does not belong appearing
+unbidden in someone's notes, hence `onRequest: true`, which excludes an entry
+from the random pick without hiding it from lookup. The pick is also over
+distinct *words* rather than entries, or the nine two-sense headwords would
+come up twice as often as the rest.
 
 The rest is a matter of not making the reader spell things exactly: every
 intensifier is peeled off the front (`really tired`, `so tired`, and `very
