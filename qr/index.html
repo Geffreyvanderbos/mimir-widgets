@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>QR Code — Mimir Widgets</title>
+  <link rel="stylesheet" href="/src/style.css" />
+</head>
+<body>
+  <div class="widget-content qr-content">
+    <p class="widget-label" id="qr-label"></p>
+    <div class="qr-canvas-wrap">
+      <canvas id="qr-canvas" class="qr-canvas"></canvas>
+    </div>
+    <p class="qr-data" id="qr-data"></p>
+    <button type="button" class="widget-button secondary qr-copy" id="qr-copy" hidden>Copy data</button>
+  </div>
+  <script type="module" src="/src/qr.ts"></script>
+</body>
+</html>
