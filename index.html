@@ -6,7 +6,14 @@
   <title>Mimir Widgets</title>
   <link rel="stylesheet" href="/src/style.css" />
   <style>
-    body { display: block; }
+    /* `html body`, not `body`: same specificity as style.css's own `body`
+       rule, so a plain `body` selector here wins only by luck of source
+       order — and Vite's build puts this inline block *before* the linked
+       stylesheet in dist/index.html, the opposite of dev, which silently
+       let style.css's `display: flex; align-items: center` win instead.
+       That's harmless while the grid fits one viewport, and clips the top
+       of the page unscrollably the moment it doesn't. */
+    html body { display: block; }
     .page { max-width: 900px; margin: 0 auto; padding: 3rem 1.25rem 4rem; }
     h1 { margin: 0 0 0.25rem; }
     .lede { max-width: 34rem; color: var(--ink-muted); margin-top: 0; }
