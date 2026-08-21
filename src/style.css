@@ -2079,3 +2079,40 @@ input.fx-amount:focus {
 .upload-preview .gpx-summary {
   margin: 0;
 }
+
+/* Shared by /qr (the embed) and /scan's live preview (the builder). Always a
+   white box regardless of theme — a QR code's contrast is the whole point,
+   and inverting it for dark mode is how a scanner stops reading it. */
+.qr-content {
+  width: 100%;
+  padding: 0 1.25rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.qr-canvas-wrap {
+  background: #ffffff;
+  border: 1px solid var(--hairline);
+  border-radius: 10px;
+  padding: 0.75rem;
+  line-height: 0;
+}
+
+.qr-canvas {
+  display: block;
+}
+
+.qr-data {
+  margin: 0.75rem 0 0;
+  max-width: 100%;
+  font-size: 0.82rem;
+  color: var(--ink-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.qr-copy {
+  margin-top: 0.65rem;
+}

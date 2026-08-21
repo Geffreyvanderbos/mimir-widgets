@@ -52,5 +52,9 @@
   ! X-Frame-Options
 /very
   ! X-Frame-Options
+/qr
+  ! X-Frame-Options
+/qr/*
+  ! X-Frame-Options
 /very/*
   ! X-Frame-Options

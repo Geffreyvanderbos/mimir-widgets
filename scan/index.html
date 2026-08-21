@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>QR code builder — Mimir Widgets</title>
+  <link rel="stylesheet" href="/src/style.css" />
+</head>
+<body>
+  <div class="gpx-page">
+    <h1>QR code builder</h1>
+    <p class="lede">
+      Type or paste whatever a scanner should read — a delivery code, a link,
+      a Wi-Fi password — and get back a widget URL. Or drop in a screenshot of
+      an existing QR code: it's decoded and redrawn clean, right here in this
+      tab, without the image ever being sent anywhere.
+    </p>
+
+    <label class="gpx-field gpx-field-wide">
+      <span>Data</span>
+      <input type="text" id="scan-data" placeholder="https://example.com/track/AB12CD" spellcheck="false" autocomplete="off" />
+    </label>
+    <label class="gpx-field gpx-field-wide">
+      <span>Label</span>
+      <input type="text" id="scan-label" placeholder="Parcel pickup" spellcheck="false" autocomplete="off" />
+    </label>
+
+    <label class="gpx-drop" id="scan-drop">
+      <input type="file" id="scan-file" accept="image/*" />
+      <span class="gpx-drop-title">Choose a screenshot</span>
+      <span class="gpx-drop-hint">or drag one here — decoded locally, never uploaded</span>
+    </label>
+
+    <p class="gpx-error" id="scan-error" role="alert" hidden></p>
+
+    <div class="gpx-preview">
+      <div class="widget-content qr-content">
+        <p class="widget-label" id="scan-preview-label"></p>
+        <div class="qr-canvas-wrap">
+          <canvas id="scan-canvas" class="qr-canvas"></canvas>
+        </div>
+        <p class="qr-data" id="scan-preview-data"></p>
+      </div>
+    </div>
+
+    <textarea class="gpx-url" id="scan-url" rows="3" readonly spellcheck="false"></textarea>
+    <div class="gpx-actions">
+      <button type="button" class="widget-button" id="scan-copy">Copy URL</button>
+      <a class="widget-button secondary" id="scan-open" target="_blank" rel="noopener">Open widget</a>
+    </div>
+  </div>
+  <script type="module" src="/src/scan.ts"></script>
+</body>
+</html>

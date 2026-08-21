@@ -22,6 +22,8 @@ export default defineConfig({
         nearby: entry('./nearby/index.html'),
         very: entry('./very/index.html'),
         upload: entry('./upload/index.html'),
+        qr: entry('./qr/index.html'),
+        scan: entry('./scan/index.html'),
       },
     },
   },

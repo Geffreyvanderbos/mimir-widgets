@@ -273,6 +273,46 @@ No auth on read, by design. Twelve random characters aren't enumerable, but
 anyone holding a link sees the image — fine for sharing a screenshot, wrong for
 anything genuinely sensitive.
 
+**`/qr` is the first widget with a real dependency in its own render path, and
+the first split into an embed plus a separate, non-embedded builder.** It turns
+`?data=` into a scannable code — a delivery tracking link, a door code, a Wi-Fi
+password — the kind of thing this repo exists to get out of screenshots.
+
+Unlike `nearby-map.ts`'s hand-rolled slippy map, encoding isn't reimplemented
+here: a QR symbol's Reed-Solomon error correction and mask-pattern selection
+are a correctness-critical spec, not a few hundred lines of geometry, so `/qr`
+draws through the `qrcode` package (`src/qr-render.ts`) instead. Decoding, for
+the bonus "photo of a code" path, goes through `jsqr` the same way. Both are
+zero-dependency and pure JS — no native/WASM piece to keep working across a
+Workers runtime.
+
+`/qr` itself stays exactly as thin as every other widget: it reads `?data=`,
+`?label=`, `?size=`, `?ec=` and draws once, with a click-to-copy fallback for
+the raw data below the code. The upload/decode/redraw side lives at `/scan`
+instead — a normal page, not embeddable, the same shape as `/gpx` building
+`/hike` URLs. That split matters for the same reason the hike builder is
+separate from the hike widget: an embed's whole config comes from its query
+string, and "decode a photo" isn't a parameter, it's a one-time action that
+produces a URL. `/scan` runs `jsQR` over a canvas's `ImageData` entirely in the
+browser — the screenshot is never sent anywhere, uploaded, or stored, the same
+privacy shape as the GPX builder's `FileReader` read and the tile proxy's
+reasoning on the hike widget: the payload (what the code says) is worth
+protecting even when no key infrastructure is involved.
+
+`WIDGETS['/qr'].height` in `functions/api/oembed.ts` is the one part of the
+oEmbed table that has to track a *rendered* dimension rather than a row count —
+it adds a fixed chrome height to `?size=`, clamped to the same 120–400 range
+`qr-render.ts` enforces, so the two can't drift apart. Getting `?size=`'s
+absence right took a real bug: `Number(null)` is `0`, not `NaN`, so a naive
+`Number.isFinite` check treated a missing parameter as an explicit `size=0`
+and clamped it up to 120 instead of falling through to the 220 default —
+exactly the trap `/train` and `/holidays` already sidestep by using
+`Math.round(Number(...)) || fallback`, which works because `0` is falsy too.
+
+The QR itself is always drawn black-on-white regardless of page theme —
+`.qr-canvas-wrap` is a fixed white box — because a QR code's whole job is
+contrast, and inverting it for dark mode is how a scanner stops reading it.
+
 ## Conventions
 
 - No comments except where they explain non-obvious *why* — never restate

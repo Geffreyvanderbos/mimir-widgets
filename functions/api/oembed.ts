@@ -80,6 +80,20 @@ const WIDGETS: Record<string, Widget> = {
       `${target.searchParams.get('from')?.toUpperCase() ?? 'EUR'} → ` +
       `${target.searchParams.get('to')?.toUpperCase() ?? 'USD'}`,
   },
+  // Label row, the code itself, the data line, and a copy button — the only
+  // variable is ?size=, so height tracks it directly. Must stay in step with
+  // src/qr-render.ts's own clamp (120-400) and qr.ts's fallback label text.
+  '/qr': {
+    height: (target) => {
+      // `|| 220`, not a NaN/isFinite check: Number(null) is 0, and 0 is
+      // falsy, so a missing ?size= falls through to the default same as
+      // /train and /holidays do for ?n=.
+      const requested = Math.round(Number(target.searchParams.get('size'))) || 220;
+      const size = Math.min(Math.max(requested, 120), 400);
+      return size + 190;
+    },
+    title: (target) => target.searchParams.get('label')?.trim() || 'QR Code',
+  },
 };
 
 function escapeAttr(value: string): string {
