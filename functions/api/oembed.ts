@@ -97,13 +97,16 @@ const WIDGETS: Record<string, Widget> = {
   // Title row, meta row, one table row per rendered row — ingredients plus
   // any prep rows (?n=, duplicated outside the compressed ?r= payload for
   // the same reason /hike keeps km/g/d alongside its track: reading it
-  // shouldn't mean decoding), source link. A wide/deep table scrolls inside
-  // its own frame rather than growing it, so height only ever has to track
-  // row count.
+  // shouldn't mean decoding), source link. 38px/row assumes most ingredient
+  // cells wrap to two lines at their ~9rem minimum width (recipe-cell in
+  // style.css) — this is still a guess, not a guarantee, which is why the
+  // widget itself (recipe.ts's body override) is what actually survives a
+  // recipe that runs longer than estimated, by scrolling instead of
+  // clipping.
   '/recipe': {
     height: (target) => {
       const requested = Math.round(Number(target.searchParams.get('n'))) || 6;
-      return 110 + Math.min(Math.max(requested, 1), 24) * 30;
+      return 120 + Math.min(Math.max(requested, 1), 24) * 38;
     },
     title: (target) => target.searchParams.get('label')?.trim() || 'Recipe Table',
   },

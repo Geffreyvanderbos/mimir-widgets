@@ -874,6 +874,27 @@ body {
   }
 }
 
+/*
+ * Every other widget's body relies on the global `body { align-items:
+ * center }` because its height formula is exact — countdown clocks, QR
+ * codes, a fixed row count. A recipe table's real height depends on how
+ * much its ingredient/action text wraps, which oembed.ts can only estimate,
+ * and centering overflowing content is a well-known trap: the browser lets
+ * you scroll to see what spills past the *bottom*, but the equal amount
+ * pushed past the *top* by centering has nowhere to scroll to — it's just
+ * gone. That's the actual bug behind the screenshot (a merge-tree render is
+ * blameless here): the title, meta and prep rows were pushed above the
+ * fold along with as many pixels of table as spilled below it, and only
+ * the bottom half of that was recoverable by scrolling.
+ *
+ * Anchoring to the top instead means a height under-estimate loses only
+ * the bottom of the table — visible by scrolling, same as any normal page
+ * — rather than losing the top unrecoverably.
+ */
+body:has(.recipe-content) {
+  align-items: flex-start;
+}
+
 .recipe-content {
   padding-top: 1.25rem;
   padding-bottom: 1.25rem;
@@ -885,11 +906,14 @@ body {
   color: var(--ink-muted);
 }
 
-/* Sideways scroll is the fallback, not the plan — cell text wraps (below)
-   so most recipes fit a 600px embed at full height without it. It only
-   kicks in for a merge chain deep enough that even wrapped columns can't
-   shrink past .recipe-cell's min-width, which oembed.ts's fixed iframe
-   height can't grow to accommodate anyway. */
+/* Sideways scroll is the plan for a wide recipe, not a fallback to avoid —
+   forcing every table down to a 600px embed's width (width:100%, no floor)
+   is what squeezed ingredient names down to one word per line and inflated
+   every row's height fighting it, which is what actually blew the table
+   past oembed.ts's estimate in the first place. A cell has a real minimum
+   width instead (below), and the table is left free to be wider than the
+   frame: most recipes still fit without scrolling, and the ones that don't
+   scroll cleanly instead of rendering unreadably narrow. */
 .recipe-table-wrap {
   overflow-x: auto;
 }
@@ -903,6 +927,7 @@ body {
 
 .recipe-table {
   width: 100%;
+  min-width: max-content;
   border-collapse: collapse;
   font-size: 0.85rem;
 }
@@ -912,7 +937,8 @@ body {
   padding: 0.4rem 0.6rem;
   vertical-align: middle;
   text-align: left;
-  min-width: 4.5rem;
+  min-width: 9rem;
+  max-width: 16rem;
   overflow-wrap: anywhere;
 }
 
