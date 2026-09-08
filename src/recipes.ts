@@ -11,7 +11,7 @@
  */
 
 import { copyToClipboard } from './clipboard';
-import { buildLayout, encodeRecipe, type RecipeData, type RecipeLayout, type RecipeStep } from './recipe-codec';
+import { applyRecipeParams, buildLayout, encodeRecipe, type RecipeData, type RecipeLayout, type RecipeStep } from './recipe-codec';
 import { formatRecipeMeta, renderTableHtml } from './recipe-render';
 import { askForJson, loadLlmConfig, saveLlmConfig, LlmError } from './recipe-llm';
 
@@ -186,8 +186,7 @@ async function buildResultUrl(data: RecipeData, layout: RecipeLayout): Promise<v
   // data), so encodeRecipe is told to trust it instead of recomputing.
   const payload = await encodeRecipe(data, layout);
   const target = new URL('/recipe', location.origin);
-  target.searchParams.set('r', payload);
-  target.searchParams.set('label', data.t);
+  applyRecipeParams(target, data, payload);
   // Row count, not ingredient count: prep rows render above the merge
   // table, and oembed.ts's height formula has to account for every row it
   // actually draws.
