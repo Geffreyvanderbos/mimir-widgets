@@ -966,6 +966,64 @@ body {
   display: none;
 }
 
+/*
+ * Set-and-forget: a configured endpoint is chrome you look at once and
+ * never again, so it collapses to a one-line summary rather than sitting
+ * open above the thing you actually do on every visit (recipes.ts decides
+ * open/closed on load from whether localStorage already has a config, and
+ * keeps the summary text in sync as the fields change).
+ */
+.recipe-llm-details {
+  margin: 0 0 1.5rem;
+  border: 1px solid var(--hairline);
+  border-radius: 10px;
+}
+
+.recipe-llm-summary {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.65rem 1rem;
+  font-size: 0.85rem;
+  color: var(--ink-muted);
+  cursor: pointer;
+  list-style: none;
+  user-select: none;
+}
+
+.recipe-llm-summary:hover {
+  color: var(--ink);
+}
+
+.recipe-llm-summary::-webkit-details-marker {
+  display: none;
+}
+
+/* A hand-drawn chevron rather than the native marker, so it can sit after
+   the label and rotate on [open] the way disclosure affordances usually do. */
+.recipe-llm-summary::after {
+  content: '';
+  width: 0.4rem;
+  height: 0.4rem;
+  margin-left: auto;
+  border-right: 1.5px solid var(--ink-faint);
+  border-bottom: 1.5px solid var(--ink-faint);
+  transform: rotate(45deg);
+  transition: transform 0.15s ease;
+}
+
+.recipe-llm-details[open] .recipe-llm-summary::after {
+  transform: rotate(-135deg);
+}
+
+.recipe-llm-details[open] .recipe-llm-summary {
+  border-bottom: 1px solid var(--hairline);
+}
+
+.recipe-llm-body {
+  padding: 0.85rem 1rem 1rem;
+}
+
 .recipe-llm-row {
   display: flex;
   gap: 0.75rem;
@@ -988,13 +1046,46 @@ body {
   -webkit-text-security: disc;
 }
 
+/* The one raised surface on this page — with the LLM setup tucked away
+   above, this card is the entire remaining job, so it gets the visual
+   weight a background lift + border give it, rather than reading as one
+   more field among several. */
+.recipe-build-card {
+  padding: 1.5rem;
+  background: var(--bg-raised);
+  border: 1px solid var(--hairline);
+  border-radius: 14px;
+  margin-bottom: 1.75rem;
+}
+
+.recipe-build-button {
+  width: 100%;
+  margin-top: 0.35rem;
+  padding: 0.6rem 1rem;
+  font-size: 0.95rem;
+}
+
+/* Centered rather than left-aligned under the button — this is the one
+   thing on the page actively telling you something is happening, and
+   giving it its own centered stage (instead of a stray line of text) is
+   what makes that read as "in progress" rather than "an error message". */
+.recipe-progress-stage {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 1rem;
+  text-align: center;
+}
+
 /* Indeterminate on purpose — there's no token stream to compute a real
    percentage from (recipe-llm.ts doesn't stream), and a bar that claimed
    one would be lying. A sliding segment says "still running" honestly,
    the same job the elapsed-seconds count next to it does in text. */
 .recipe-progress {
+  width: 220px;
+  max-width: 100%;
   height: 4px;
-  margin-top: 0.75rem;
   border-radius: 2px;
   background: var(--hairline);
   overflow: hidden;
@@ -1014,7 +1105,7 @@ body {
 }
 
 .recipe-status {
-  margin: 0.6rem 0 0;
+  margin: 0;
   font-size: 0.8rem;
   color: var(--ink-muted);
 }
@@ -1027,6 +1118,18 @@ body {
   .recipe-status.is-error {
     color: #ff6961;
   }
+}
+
+/* Fixed-height-and-clipped (like .gpx-preview mirrors a hike/QR embed's one
+   true size) doesn't fit here: a recipe's rendered height depends on its
+   row count, which this preview can't know ahead of rendering it. It scrolls
+   internally instead of ever hiding rows from the person building it. */
+.recipe-preview-box {
+  max-height: 420px;
+  margin: 1.25rem 0 0.5rem;
+  overflow-y: auto;
+  border: 1px solid var(--hairline);
+  border-radius: 10px;
 }
 
 /*
