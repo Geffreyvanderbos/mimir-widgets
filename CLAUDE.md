@@ -388,6 +388,19 @@ levels and to fold sequential single-input actions into one step rather than
 one column each, the same "collapse it or it won't fit the frame" reasoning
 as `/nearby`'s five-row accordion.
 
+The prompt also explicitly forbids a step's `a` text from naming the
+ingredients it touches — a rule that had to be spelled out because an early
+real-recipe test produced steps like "mix chicken, panko, gochujang, garlic
+powder, and salt" for a cell whose rowspan already covered exactly those
+rows. That's not a wording nitpick: naming them again defeats the entire
+point of Chu's original format, which is that the cell's span *is* the
+answer to "what's in this" — scanning down the row headers under an action
+cell already tells you that, and restating it in prose is the redundancy
+this table shape exists to eliminate. The rule now ships with a
+before/after pair in the system prompt (`"cream"`, not
+`"cream the butter and sugar"`) since that steered the model far more
+reliably than the prose rule alone did on its own.
+
 First real embed inside Mimir found a bug neither `wrangler pages dev` nor
 `curl` could have caught, because it only shows up once rendered content is
 taller than the iframe: `body`'s global `align-items: center` turns an
