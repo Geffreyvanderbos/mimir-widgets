@@ -388,6 +388,26 @@ levels and to fold sequential single-input actions into one step rather than
 one column each, the same "collapse it or it won't fit the frame" reasoning
 as `/nearby`'s five-row accordion.
 
+First real embed inside Mimir found a bug neither `wrangler pages dev` nor
+`curl` could have caught, because it only shows up once rendered content is
+taller than the iframe: `body`'s global `align-items: center` (every other
+widget relies on it, because their heights are exact) turns an
+under-estimated height into content clipped from *both* the top and the
+bottom, not just the bottom — a well-known CSS trap where centered
+overflow's "negative" side has nothing to scroll to. `/recipe`'s height is
+the one on this whole site that's a genuine estimate rather than a
+guarantee (it depends on how much ingredient/action text wraps, which
+`oembed.ts` can't know ahead of rendering it), so it's the one that needed
+`body:has(.recipe-content) { align-items: flex-start }` to opt out: a
+too-short estimate now only loses the *bottom* of the table, recoverable by
+scrolling, the same as any ordinary overflowing page. The forced
+`width: 100%` on `.recipe-table` was compounding it — squeezing every
+ingredient name down to one word per line inflated row heights well past
+what `?n=`'s row-count estimate assumed. `.recipe-cell`'s `min-width: 9rem`
+plus dropping the forced 100% (now `min-width: max-content` instead) fixes
+the actual cause: a cell wraps at a readable width or the table scrolls
+sideways, never both squeezed *and* clipped at once.
+
 ## Conventions
 
 - No comments except where they explain non-obvious *why* — never restate
