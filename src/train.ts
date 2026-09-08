@@ -1,3 +1,5 @@
+import { escapeHtml as esc } from './html-escape';
+
 const params = new URLSearchParams(location.search);
 
 const from = (params.get('from') ?? '').trim();
@@ -73,14 +75,6 @@ function departure(trip: Trip): Stop {
 
 function arrival(trip: Trip): Stop {
   return trip.legs[trip.legs.length - 1].destination;
-}
-
-function esc(value: string): string {
-  return value
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;');
 }
 
 // "en-CA" gives an ISO-shaped date and "longOffset" gives "GMT+02:00", which

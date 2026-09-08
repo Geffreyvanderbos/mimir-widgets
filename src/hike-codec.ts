@@ -10,6 +10,8 @@
  * GPX): 10 m of simplification leaves 169 points and 576 URL characters.
  */
 
+import { base64UrlToBytes, bytesToBase64Url } from './base64url';
+
 export interface LatLon {
   lat: number;
   lon: number;
@@ -30,23 +32,6 @@ const FORMAT_VERSION = 1;
 
 const EARTH_RADIUS_M = 6_371_000;
 const METRES_PER_DEGREE = 111_320;
-
-function bytesToBase64Url(bytes: Uint8Array): string {
-  let binary = '';
-  for (const byte of bytes) {
-    binary += String.fromCharCode(byte);
-  }
-  return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
-}
-
-function base64UrlToBytes(text: string): Uint8Array {
-  const binary = atob(text.replace(/-/g, '+').replace(/_/g, '/'));
-  const bytes = new Uint8Array(binary.length);
-  for (let i = 0; i < binary.length; i++) {
-    bytes[i] = binary.charCodeAt(i);
-  }
-  return bytes;
-}
 
 export function encodeTrack(points: LatLon[]): string {
   const bytes: number[] = [FORMAT_VERSION];
