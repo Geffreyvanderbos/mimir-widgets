@@ -1,5 +1,5 @@
-import { buildLayout, decodeRecipe } from './recipe-codec';
-import { renderTableHtml } from './recipe-render';
+import { decodeRecipe } from './recipe-codec';
+import { formatRecipeMeta, renderTableHtml } from './recipe-render';
 
 const params = new URLSearchParams(location.search);
 const titleEl = document.getElementById('recipe-title')!;
@@ -22,35 +22,21 @@ async function main(): Promise<void> {
     return;
   }
 
-  let data;
-  try {
-    data = await decodeRecipe(payload);
-  } catch {
-    fail('No readable recipe in this URL.');
-    return;
-  }
-
-  const layout = buildLayout(data);
+  const { data, layout } = await decodeRecipe(payload);
 
   titleEl.textContent = data.t;
-
-  const metaParts: string[] = [];
-  if (data.n) metaParts.push(`serves ${data.n}`);
-  if (data.m) metaParts.push(`${data.m} min`);
-  metaEl.textContent = metaParts.join('  ·  ');
-
+  metaEl.textContent = formatRecipeMeta(data);
   tableWrapEl.innerHTML = renderTableHtml(layout, data.p);
 
+  sourceEl.hidden = true;
   if (data.src) {
     try {
       sourceEl.href = data.src;
       sourceEl.textContent = new URL(data.src).hostname.replace(/^www\./, '');
       sourceEl.hidden = false;
     } catch {
-      sourceEl.hidden = true;
+      // Leave it hidden — an unparseable src is treated the same as none.
     }
-  } else {
-    sourceEl.hidden = true;
   }
 }
 

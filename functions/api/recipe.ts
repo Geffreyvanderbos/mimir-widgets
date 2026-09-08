@@ -51,8 +51,10 @@ function describeUpstreamStatus(status: number): string {
 // back to the caller even if it succeeded.
 function isBlockedHost(hostname: string): boolean {
   const host = hostname.toLowerCase();
-  if (host === 'localhost' || host.endsWith('.localhost') || host === '0.0.0.0') return true;
+  if (host === 'localhost' || host.endsWith('.localhost')) return true;
 
+  // '0.0.0.0' falls straight through to the ipv4 branch below and is
+  // already caught there by `a === 0` — no separate check needed for it.
   const ipv4 = /^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/.exec(host);
   if (ipv4) {
     const a = Number(ipv4[1]);
@@ -252,7 +254,9 @@ export const onRequest: PagesFunction = async (context) => {
     return err(502, 'Could not read that page.');
   }
 
-  const recipe = jsonLdBlocks.map(findRecipe).find((found) => found !== null) ?? null;
+  // findRecipe already recurses into arrays, so it can be handed the whole
+  // list directly instead of mapping + finding over it by hand.
+  const recipe = findRecipe(jsonLdBlocks);
   if (recipe === null) {
     return err(422, 'No schema.org Recipe data found on that page.');
   }

@@ -11,8 +11,8 @@
  */
 
 import { copyToClipboard } from './clipboard';
-import { buildLayout, encodeRecipe, type RecipeData, type RecipeStep } from './recipe-codec';
-import { renderTableHtml } from './recipe-render';
+import { buildLayout, encodeRecipe, type RecipeData, type RecipeLayout, type RecipeStep } from './recipe-codec';
+import { formatRecipeMeta, renderTableHtml } from './recipe-render';
 import { askForJson, loadLlmConfig, saveLlmConfig, LlmError } from './recipe-llm';
 
 interface Extracted {
@@ -177,13 +177,14 @@ function validateStepGraph(value: unknown): asserts value is StepGraph {
   buildLayout({ t: '', i: record.i as string[], s: record.s as RecipeStep[] });
 }
 
-async function buildResultUrl(data: RecipeData): Promise<void> {
-  const layout = buildLayout(data);
+async function buildResultUrl(data: RecipeData, layout: RecipeLayout): Promise<void> {
   previewTitleEl.textContent = data.t;
-  previewMetaEl.textContent = [data.n ? `serves ${data.n}` : '', data.m ? `${data.m} min` : ''].filter(Boolean).join('  ·  ');
+  previewMetaEl.textContent = formatRecipeMeta(data);
   previewTableEl.innerHTML = renderTableHtml(layout, data.p);
 
-  const payload = await encodeRecipe(data);
+  // Already validated (the caller just built this layout from the same
+  // data), so encodeRecipe is told to trust it instead of recomputing.
+  const payload = await encodeRecipe(data, layout);
   const target = new URL('/recipe', location.origin);
   target.searchParams.set('r', payload);
   target.searchParams.set('label', data.t);
@@ -233,42 +234,37 @@ const FILLER_PHASES = [
 // tic — a phrase change every few breaths, not every glance.
 const FILLER_INTERVAL_MS = 5500;
 
-function startProgress(
-  statusEl: HTMLElement,
-  barEl: HTMLElement,
-): { setPhase: (text: string) => void; stop: () => void } {
+function startProgress(): { setPhase: (text: string) => void; stop: () => void } {
   const start = Date.now();
   let phase = 'Waiting on the model…';
-  let fillerIndex = 0;
-  let fillerId: number | undefined;
+  let phaseSetAt = start;
 
-  const render = () => setStatus(statusEl, `${phase} (${Math.round((Date.now() - start) / 1000)}s)`, false);
+  // One ticker, not two: the filler phrase is simply whichever one elapsed
+  // time-since-the-last-real-event lands on, rather than a second interval
+  // restarted every time setPhase fires.
+  const render = () => {
+    const now = Date.now();
+    const sinceRealPhase = now - phaseSetAt;
+    const shown =
+      sinceRealPhase < FILLER_INTERVAL_MS
+        ? phase
+        : FILLER_PHASES[Math.floor(sinceRealPhase / FILLER_INTERVAL_MS) % FILLER_PHASES.length];
+    setStatus(statusEl, `${shown} (${Math.round((now - start) / 1000)}s)`, false);
+  };
 
-  function restartFillerRotation(): void {
-    if (fillerId !== undefined) clearInterval(fillerId);
-    fillerIndex = 0;
-    fillerId = window.setInterval(() => {
-      phase = FILLER_PHASES[fillerIndex % FILLER_PHASES.length];
-      fillerIndex++;
-      render();
-    }, FILLER_INTERVAL_MS);
-  }
-
-  barEl.hidden = false;
+  progressEl.hidden = false;
   render();
   const tickId = window.setInterval(render, 1000);
-  restartFillerRotation();
 
   return {
     setPhase: (text: string) => {
       phase = text;
+      phaseSetAt = Date.now();
       render();
-      restartFillerRotation();
     },
     stop: () => {
       clearInterval(tickId);
-      if (fillerId !== undefined) clearInterval(fillerId);
-      barEl.hidden = true;
+      progressEl.hidden = true;
     },
   };
 }
@@ -283,7 +279,7 @@ async function generateFromExtracted(source: Extracted): Promise<void> {
   }
 
   resultStepEl.hidden = true;
-  const progress = startProgress(statusEl, progressEl);
+  const progress = startProgress();
 
   try {
     const value = await askForJson(config, SYSTEM_PROMPT, buildUserPrompt(source), validateStepGraph, progress.setPhase);
@@ -300,7 +296,11 @@ async function generateFromExtracted(source: Extracted): Promise<void> {
       src: source.sourceUrl,
     };
 
-    await buildResultUrl(data);
+    // validateStepGraph already confirmed graph.i/s lay out cleanly, but
+    // that check discarded its own layout — this is the one recompute the
+    // final (title/servings-bearing) data needs, and it's reused for both
+    // the preview render and the encoded URL below.
+    await buildResultUrl(data, buildLayout(data));
     setStatus(statusEl, 'Done.', false);
   } catch (error) {
     progress.stop();

@@ -875,27 +875,29 @@ body {
 }
 
 /*
- * Every other widget's body relies on the global `body { align-items:
- * center }` because its height formula is exact — countdown clocks, QR
- * codes, a fixed row count. A recipe table's real height depends on how
- * much its ingredient/action text wraps, which oembed.ts can only estimate,
- * and centering overflowing content is a well-known trap: the browser lets
- * you scroll to see what spills past the *bottom*, but the equal amount
- * pushed past the *top* by centering has nowhere to scroll to — it's just
- * gone. That's the actual bug behind the screenshot (a merge-tree render is
- * blameless here): the title, meta and prep rows were pushed above the
- * fold along with as many pixels of table as spilled below it, and only
- * the bottom half of that was recoverable by scrolling.
+ * `align-self: stretch` is the existing convention every other widget with
+ * non-trivial internal layout already uses to opt out of body's
+ * `align-items: center` (see .calc-content, .dummy-content, .timer-content,
+ * .hike-content, .color-content, .fx-content, .nearby-content) — this is
+ * the first one that needs it for a different reason than they do, but it's
+ * still the same mechanism, not a new one.
  *
- * Anchoring to the top instead means a height under-estimate loses only
- * the bottom of the table — visible by scrolling, same as any normal page
- * — rather than losing the top unrecoverably.
+ * Here it's load-bearing rather than cosmetic: a recipe table's real height
+ * depends on how much its ingredient/action text wraps, which oembed.ts can
+ * only estimate, and centering overflowing content is a well-known trap —
+ * the browser lets you scroll to see what spills past the *bottom*, but the
+ * equal amount pushed past the *top* by centering has nowhere to scroll to.
+ * That's the actual bug behind the first real embed inside Mimir (the
+ * merge-tree render was blameless): the title, meta and prep rows were
+ * pushed above the fold along with as many pixels of table as spilled
+ * below it, and only the bottom half was recoverable by scrolling.
+ * `stretch` keeps this content pinned to the top of its box regardless of
+ * whether it under- or over-fills the estimated height, so a bad estimate
+ * only ever costs the bottom of the table — recoverable by scrolling, same
+ * as any ordinary page.
  */
-body:has(.recipe-content) {
-  align-items: flex-start;
-}
-
 .recipe-content {
+  align-self: stretch;
   padding-top: 1.25rem;
   padding-bottom: 1.25rem;
 }
@@ -942,9 +944,14 @@ body:has(.recipe-content) {
   overflow-wrap: anywhere;
 }
 
+.recipe-cell-ingredient,
+.recipe-prep-label,
+.recipe-prep-text {
+  background: var(--bg-raised);
+}
+
 .recipe-cell-ingredient {
   color: var(--ink-muted);
-  background: var(--bg-raised);
 }
 
 .recipe-cell-action {
@@ -959,12 +966,7 @@ body:has(.recipe-content) {
   font-family: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace;
   font-size: 0.7rem;
   color: var(--ink-faint);
-  background: var(--bg-raised);
   white-space: nowrap;
-}
-
-.recipe-prep-text {
-  background: var(--bg-raised);
 }
 
 .recipe-source {
@@ -986,10 +988,6 @@ body:has(.recipe-content) {
 .recipe-step h2 {
   font-size: 0.95rem;
   margin: 0 0 0.5rem;
-}
-
-.recipe-step[hidden] {
-  display: none;
 }
 
 /*

@@ -1,3 +1,5 @@
+import { escapeHtml as esc } from './html-escape';
+
 const params = new URLSearchParams(location.search);
 const locale = navigator.language || 'en';
 
@@ -22,14 +24,6 @@ interface Holiday {
   name: string;
   global: boolean;
   counties: string[] | null;
-}
-
-function esc(value: string): string {
-  return value
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;');
 }
 
 function pad(value: number): string {
