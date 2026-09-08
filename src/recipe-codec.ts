@@ -43,6 +43,9 @@ export interface RecipeData {
 }
 
 export interface RecipeCell {
+  /** The node id this cell renders — `row` is DFS order, not input order,
+   *  so it can't be inverted back to this. */
+  id: number;
   row: number;
   col: number;
   rowSpan: number;
@@ -144,6 +147,7 @@ export function buildLayout(data: RecipeData): RecipeLayout {
     const consumerStep = consumedByStep[id];
     const endCol = consumerStep === -1 ? totalCols : col[ingredientCount + consumerStep];
     cells.push({
+      id,
       row: firstRow[id],
       col: col[id],
       rowSpan: leafCount[id],
@@ -189,6 +193,15 @@ export async function encodeRecipe(data: RecipeData, layout?: RecipeLayout): Pro
   versioned.set(json, 1);
 
   return bytesToBase64Url(await compress(versioned));
+}
+
+/** Sets the two params every /recipe URL needs from an encoded payload —
+ *  shared by the builder (recipes.ts, building a fresh URL) and the widget's
+ *  own in-place editor (recipe.ts, rewriting the current one), so the two
+ *  can't drift on what a /recipe URL is made of. */
+export function applyRecipeParams(url: URL, data: RecipeData, payload: string): void {
+  url.searchParams.set('r', payload);
+  url.searchParams.set('label', data.t);
 }
 
 export interface DecodedRecipe {

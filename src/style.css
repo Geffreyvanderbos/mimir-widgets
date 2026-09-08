@@ -1001,6 +1001,26 @@ body {
   color: var(--accent);
 }
 
+[contenteditable='true'] {
+  cursor: text;
+  outline: none;
+  border-radius: 3px;
+}
+
+[contenteditable='true']:hover {
+  box-shadow: 0 0 0 1px var(--hairline);
+}
+
+[contenteditable='true']:focus {
+  box-shadow: 0 0 0 1px var(--accent);
+}
+
+.recipe-edit-hint {
+  margin-top: 0.6rem;
+  font-size: 0.7rem;
+  color: var(--ink-faint);
+}
+
 .recipe-step {
   margin: 1.75rem 0;
 }
