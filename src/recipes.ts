@@ -123,12 +123,12 @@ Node ids: ingredient k (its 0-indexed position in "i") has id k. Step k's result
 Rules:
 - Keep the merge chain shallow, at most about 5 levels deep: fold several sequential actions on the same thing into one step's "a" (e.g. one step "melt butter, then cool slightly" rather than two steps).
 - Every entry in "i" must be consumed by exactly one step.
-- Word each "a" as a short imperative phrase.
+- Never name an ingredient again inside "a". The whole point of this format is that a step's cell already spans exactly the rows (ingredients) it touches, so scanning down tells you what's combined without reading a word of the label — restating them there is exactly the redundancy this format exists to avoid. Say only the action: "cream", "fold in, then rest 10 min", "pan-fry until golden" — never "cream the butter and sugar" or "mix chicken, panko, and garlic powder".
 - Keep ingredient text to a glance-length quantity + name (e.g. "250 g flour").
 - Convert US customary quantities and temperatures to metric — cups, tablespoons, teaspoons, ounces, pounds and Fahrenheit all become grams, millilitres or Celsius. Round to a sensible cooking precision (nearest 5 g/mL, nearest 5°C) rather than false precision, and leave a recipe that's already metric as given.
 - Put oven/pan/equipment setup and anything else that isn't really "about" one ingredient into "p" rather than stretching a step's "a" to cover it.
 
-Worked example — 2 cups flour, 1 cup water and 1 teaspoon salt becoming dough, floured surface prepped first (note the metric conversion and the prep row):
+Worked example — 2 cups flour, 1 cup water and 1 teaspoon salt becoming dough, floured surface prepped first (note the metric conversion, the prep row, and that neither step names an ingredient again):
 {"p":["Flour a work surface"],"i":["250 g flour","240 mL water","5 g salt"],"s":[{"u":[0,2],"a":"mix dry"},{"u":[3,1],"a":"knead into dough"}]}`;
 
 function buildUserPrompt(source: Extracted): string {
