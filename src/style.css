@@ -802,7 +802,8 @@ body {
   font-variant-numeric: tabular-nums;
 }
 
-.gpx-field input[type='text'] {
+.gpx-field input[type='text'],
+.gpx-field input[type='password'] {
   font: inherit;
   font-size: 0.9rem;
   color: var(--ink);
@@ -869,6 +870,161 @@ body {
 
 @media (prefers-color-scheme: dark) {
   .gpx-length.is-warning {
+    color: #ff6961;
+  }
+}
+
+.recipe-content {
+  padding-top: 1.25rem;
+  padding-bottom: 1.25rem;
+}
+
+.recipe-meta {
+  margin: -0.6rem 0 0.85rem;
+  font-size: 0.8rem;
+  color: var(--ink-muted);
+}
+
+/* Sideways scroll is the fallback, not the plan — cell text wraps (below)
+   so most recipes fit a 600px embed at full height without it. It only
+   kicks in for a merge chain deep enough that even wrapped columns can't
+   shrink past .recipe-cell's min-width, which oembed.ts's fixed iframe
+   height can't grow to accommodate anyway. */
+.recipe-table-wrap {
+  overflow-x: auto;
+}
+
+.recipe-table-wrap.is-empty {
+  padding: 1.5rem 0;
+  color: var(--ink-muted);
+  font-size: 0.9rem;
+  text-align: center;
+}
+
+.recipe-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+
+.recipe-cell {
+  border: 1px solid var(--hairline);
+  padding: 0.4rem 0.6rem;
+  vertical-align: middle;
+  text-align: left;
+  min-width: 4.5rem;
+  overflow-wrap: anywhere;
+}
+
+.recipe-cell-ingredient {
+  color: var(--ink-muted);
+  background: var(--bg-raised);
+}
+
+.recipe-cell-action {
+  font-weight: 500;
+}
+
+/* Prep rows sit above the merge table proper — no rowspan/colspan geometry
+   to speak of, just a tag and a line of text, so they're styled apart from
+   .recipe-cell-ingredient/-action rather than trying to fit either. */
+.recipe-prep-label {
+  min-width: 0;
+  font-family: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace;
+  font-size: 0.7rem;
+  color: var(--ink-faint);
+  background: var(--bg-raised);
+  white-space: nowrap;
+}
+
+.recipe-prep-text {
+  background: var(--bg-raised);
+}
+
+.recipe-source {
+  display: block;
+  margin-top: 0.6rem;
+  font-size: 0.75rem;
+  color: var(--ink-faint);
+  text-decoration: none;
+}
+
+.recipe-source:hover {
+  color: var(--accent);
+}
+
+.recipe-step {
+  margin: 1.75rem 0;
+}
+
+.recipe-step h2 {
+  font-size: 0.95rem;
+  margin: 0 0 0.5rem;
+}
+
+.recipe-step[hidden] {
+  display: none;
+}
+
+.recipe-llm-row {
+  display: flex;
+  gap: 0.75rem;
+  align-items: flex-end;
+  flex-wrap: wrap;
+}
+
+.recipe-llm-row .gpx-field {
+  flex: 1;
+  min-width: 12rem;
+}
+
+/* type="text" on purpose, not "password" — a password-type field is what
+   makes Chrome/Safari read this as a credential worth offering to save,
+   autocomplete value and all. Masking the characters with CSS instead gets
+   the same look without that prompt. WebKit/Blink-only; Firefox just shows
+   the key in plain text, which is the honest fallback rather than a broken
+   one. */
+.recipe-key-input {
+  -webkit-text-security: disc;
+}
+
+/* Indeterminate on purpose — there's no token stream to compute a real
+   percentage from (recipe-llm.ts doesn't stream), and a bar that claimed
+   one would be lying. A sliding segment says "still running" honestly,
+   the same job the elapsed-seconds count next to it does in text. */
+.recipe-progress {
+  height: 4px;
+  margin-top: 0.75rem;
+  border-radius: 2px;
+  background: var(--hairline);
+  overflow: hidden;
+}
+
+.recipe-progress-bar {
+  width: 35%;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--accent);
+  animation: recipe-progress-slide 1.3s ease-in-out infinite;
+}
+
+@keyframes recipe-progress-slide {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(285%); }
+}
+
+.recipe-status {
+  margin: 0.6rem 0 0;
+  font-size: 0.8rem;
+  color: var(--ink-muted);
+}
+
+.recipe-status.is-error {
+  color: #d1332e;
+}
+
+@media (prefers-color-scheme: dark) {
+  .recipe-status.is-error {
     color: #ff6961;
   }
 }

@@ -94,6 +94,19 @@ const WIDGETS: Record<string, Widget> = {
     },
     title: (target) => target.searchParams.get('label')?.trim() || 'QR Code',
   },
+  // Title row, meta row, one table row per rendered row — ingredients plus
+  // any prep rows (?n=, duplicated outside the compressed ?r= payload for
+  // the same reason /hike keeps km/g/d alongside its track: reading it
+  // shouldn't mean decoding), source link. A wide/deep table scrolls inside
+  // its own frame rather than growing it, so height only ever has to track
+  // row count.
+  '/recipe': {
+    height: (target) => {
+      const requested = Math.round(Number(target.searchParams.get('n'))) || 6;
+      return 110 + Math.min(Math.max(requested, 1), 24) * 30;
+    },
+    title: (target) => target.searchParams.get('label')?.trim() || 'Recipe Table',
+  },
 };
 
 function escapeAttr(value: string): string {

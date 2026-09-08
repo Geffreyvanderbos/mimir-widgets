@@ -313,6 +313,81 @@ The QR itself is always drawn black-on-white regardless of page theme —
 `.qr-canvas-wrap` is a fixed white box — because a QR code's whole job is
 contrast, and inverting it for dark mode is how a scanner stops reading it.
 
+**`/recipe` stores a tree in the URL, not a grid — because the payload is
+built by an LLM, and a tree is the shape an LLM can get right.** It's Michael
+Chu's cookingforengineers.com format: ingredients listed top to bottom in the
+order they're first used, cooking steps merging them left to right, each
+step's cell spanning exactly what it combines, converging to one cell for the
+finished dish. `recipe-codec.ts`'s `RecipeData` is ingredients as leaves and
+steps as nodes that consume already-made node ids — "combine ids 0, 1, 4"
+rather than "this cell is at row 3, column 2, rowspan 5". The only two ways a
+tree like that can be wrong are a dangling id or a double-consumed one, both a
+one-line check; an LLM-emitted grid can overlap, gap or overflow a rowspan,
+and a bad rowspan renders as visibly broken HTML that then has to be detected
+after the fact. `buildLayout` derives row, column, rowspan and colspan from
+the tree — geometry the model is never asked for.
+
+Row order comes from a DFS over the tree starting at the root, not from the
+order the ingredients happen to be listed in. That's not just convenience —
+it's the thing that makes a rectangular rowspan possible at all: a step's
+rowspan only draws as one clean cell if the rows it covers are contiguous, and
+DFS-from-the-root is what guarantees that by construction, however the model
+ordered its own ingredient array. A column is one past the latest column any
+of a node's inputs landed on, and a node that's ready early but not consumed
+until later stretches its cell forward with colspan instead of leaving a gap
+— tiling is verified exhaustively in `recipe-codec.ts`'s test (every row/col
+covered exactly once) before trusting the algorithm with real LLM output.
+
+Getting the recipe *into* that shape is two separate fetches, deliberately
+kept apart. `functions/api/recipe.ts` is the "recipe link parser": it fetches
+the page server-side (most recipe sites send no CORS header, so the browser
+can't do this itself) and returns only what it found in schema.org Recipe
+JSON-LD — title, ingredients, instructions, servings, total time — never the
+raw HTML. That's the same argument as the tile proxy and `/api/nearby`:
+returning extracted fields rather than bytes is what keeps this from being a
+general-purpose fetch proxy, and it also means a recipe page's markup,
+scripts and ad boilerplate never reach the model in step two. A page with no
+Recipe schema gets a plain 422 rather than an attempt at freeform HTML
+scraping — "recipe *schemed* website" in the phrase this feature was
+specced from, not "any web page," and a clear miss beats a confidently wrong
+scrape. `recipeInstructions` is the field implementers disagree on most (a
+string, an array of strings, an array of `HowToStep`, `HowToSection` wrapping
+its own list) and all four are handled, because each shows up often enough in
+the wild to matter.
+
+The second fetch — turning those extracted fields into the `RecipeData` tree
+— goes to an OpenAI-compatible chat-completions endpoint the user configures
+in `recipes.ts` (`recipe-llm.ts`): base URL, model, optional API key, saved to
+this browser's `localStorage` only. Same shape as the NS train key and the
+image-host upload token, and for the same reason — a key or a local model's
+address is not this site's business to see, and the LLM step never touches
+this site's own server at all. `askForJson` doesn't send `response_format`
+(plenty of local servers 400 on a field they don't recognise); it prompts for
+JSON, strips fences, and on either a parse failure or a `buildLayout`
+validation failure it feeds the specific error back to the model for one more
+try, up to three attempts total — local models in particular sometimes wrap
+JSON in prose, or emit a step graph that doesn't converge, despite being told
+the exact shape and given a worked example.
+
+The failure worth naming specifically rather than surfacing as "fetch
+failed": a browser on this https page can reach `http://localhost`, but a LAN
+IP like `http://192.168.x.x` is blocked as mixed content, and Ollama sends no
+CORS header at all unless `OLLAMA_ORIGINS` is set — that's the single most
+likely reason step three fails, so `recipe-llm.ts` names it in the error
+rather than leaving a generic network failure for someone to puzzle over.
+
+`WIDGETS['/recipe']` in `functions/api/oembed.ts` sizes the iframe from `?n=`
+— the ingredient count, duplicated in the URL outside the compressed `?r=`
+payload — for the same reason `/hike` keeps `km`/`g`/`d` alongside its track:
+reading it shouldn't mean decoding a deflate stream. The table itself scrolls
+sideways in its own box (`.recipe-table-wrap`) rather than growing the frame,
+because column count is the one dimension a fixed-height iframe can't absorb
+— a 600px-wide embed crushes a deep merge chain long before it runs out of
+rows. The prompt in `recipes.ts` asks the model to keep chains to about five
+levels and to fold sequential single-input actions into one step rather than
+one column each, the same "collapse it or it won't fit the frame" reasoning
+as `/nearby`'s five-row accordion.
+
 ## Conventions
 
 - No comments except where they explain non-obvious *why* — never restate
