@@ -24,6 +24,8 @@ export default defineConfig({
         upload: entry('./upload/index.html'),
         qr: entry('./qr/index.html'),
         scan: entry('./scan/index.html'),
+        recipe: entry('./recipe/index.html'),
+        recipes: entry('./recipes/index.html'),
       },
     },
   },

@@ -3,8 +3,8 @@
 // JS. So the tag has to be in the server response, and its href has to
 // encode *this exact request's* URL, which is why this can't be a static
 // build-time <link> baked into the HTML file.
-// Note the absence of '/gpx': that's the builder page for /hike URLs, a normal
-// page on this site rather than an embeddable widget.
+// Note the absence of '/gpx' and '/recipes': builder pages for /hike and
+// /recipe URLs, normal pages on this site rather than embeddable widgets.
 const WIDGET_PATHS = [
   '/countdown',
   '/pomodoro',
@@ -20,6 +20,7 @@ const WIDGET_PATHS = [
   '/nearby',
   '/very',
   '/qr',
+  '/recipe',
 ];
 
 export const onRequest: PagesFunction = async (context) => {

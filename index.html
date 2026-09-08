@@ -274,6 +274,23 @@
         </p>
         <p class="widget-params"><code>?blocks=</code><code>?depth=</code></p>
       </div>
+
+      <div class="widget-card">
+        <h2><a href="/recipes">Recipe Table</a></h2>
+        <p>
+          A Michael Chu / cookingforengineers.com-style
+          table — ingredients top to bottom in the order they're used, steps
+          merging them left to right into one dish — compressed into the
+          URL like the hike track above. The
+          <a href="/recipes">builder</a> fetches a recipe page's schema.org
+          data here (most recipe sites have no CORS header for the browser
+          to do it directly), then sends just the ingredients and
+          instructions to an OpenAI-compatible LLM endpoint <em>you</em>
+          configure — local or hosted, its address and key staying in your
+          browser — to rearrange into the table.
+        </p>
+        <p class="widget-params"><code>?r=</code><code>?label=</code><code>?n=</code></p>
+      </div>
     </div>
 
     <p class="foot">

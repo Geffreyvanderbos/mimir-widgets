@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Recipe table builder — Mimir Widgets</title>
+  <link rel="stylesheet" href="/src/style.css" />
+</head>
+<body>
+  <div class="gpx-page">
+    <h1>Recipe table builder</h1>
+    <p class="lede">
+      Turns a recipe page into a Cooking-for-Engineers-style table:
+      ingredients top to bottom in the order they're used, steps merging them
+      left to right into one finished dish. Everything below runs in this
+      tab — the recipe is fetched by this site (most recipe pages have no
+      CORS header for the browser to fetch it directly), but the rearranging
+      is done by an LLM endpoint <em>you</em> point this at, and that
+      endpoint's address and key never leave your browser.
+    </p>
+
+    <section class="recipe-step">
+      <h2>1. LLM endpoint</h2>
+      <p class="gpx-hint">
+        Any OpenAI-compatible chat-completions endpoint: a local server
+        (Ollama, LM Studio, llama.cpp) or a hosted one. Saved to this
+        browser's local storage only.
+      </p>
+      <div class="recipe-llm-row">
+        <label class="gpx-field">
+          <span>Base URL</span>
+          <input type="text" id="recipe-llm-url" placeholder="http://localhost:11434/v1" spellcheck="false" autocomplete="off" />
+        </label>
+        <label class="gpx-field">
+          <span>Model</span>
+          <input type="text" id="recipe-llm-model" placeholder="llama3.1" spellcheck="false" autocomplete="off" />
+        </label>
+        <label class="gpx-field">
+          <span>API key <em>(optional)</em></span>
+          <input type="text" id="recipe-llm-key" class="recipe-key-input" placeholder="sk-…" spellcheck="false" autocomplete="off" />
+        </label>
+      </div>
+    </section>
+
+    <section class="recipe-step">
+      <h2>2. Recipe URL</h2>
+      <p class="gpx-hint">Paste a link to a recipe page that publishes schema.org Recipe data (most modern recipe sites do — it's what gives Google its rich-result card). Fetching the page and asking the model to rearrange it both happen on this one click.</p>
+      <div class="gpx-controls">
+        <label class="gpx-field gpx-field-wide">
+          <span>URL</span>
+          <input type="text" id="recipe-url" placeholder="https://example.com/recipes/pancakes" spellcheck="false" autocomplete="off" />
+        </label>
+      </div>
+      <button type="button" class="widget-button" id="recipe-build">Build recipe table</button>
+      <div class="recipe-progress" id="recipe-progress" hidden><div class="recipe-progress-bar"></div></div>
+      <p class="recipe-status" id="recipe-status"></p>
+    </section>
+
+    <section class="recipe-step" id="recipe-result-step" hidden>
+      <h2>3. Result</h2>
+      <div class="gpx-preview">
+        <div class="widget-content recipe-content">
+          <p class="widget-label" id="recipe-preview-title"></p>
+          <p class="recipe-meta" id="recipe-preview-meta"></p>
+          <div class="recipe-table-wrap" id="recipe-preview-table"></div>
+        </div>
+      </div>
+      <textarea class="gpx-url" id="recipe-result-url" rows="3" readonly spellcheck="false"></textarea>
+      <p class="gpx-length" id="recipe-result-length"></p>
+      <div class="gpx-actions">
+        <button type="button" class="widget-button" id="recipe-copy">Copy URL</button>
+        <a class="widget-button secondary" id="recipe-open" target="_blank" rel="noopener">Open widget</a>
+        <button type="button" class="widget-button secondary" id="recipe-regenerate">Regenerate</button>
+      </div>
+    </section>
+  </div>
+  <script type="module" src="/src/recipes.ts"></script>
+</body>
+</html>

@@ -58,3 +58,7 @@
   ! X-Frame-Options
 /very/*
   ! X-Frame-Options
+/recipe
+  ! X-Frame-Options
+/recipe/*
+  ! X-Frame-Options
