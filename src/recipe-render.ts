@@ -31,8 +31,14 @@ export function renderTableHtml(layout: RecipeLayout, prep?: string[]): string {
     const cells = byRow.get(r) ?? [];
     const tds = cells
       .map(
+        // `--col` drives the left-to-right shading in style.css. Passed as a
+        // custom property rather than a computed class/inline background
+        // because a cell's true column is layout data (recipe-codec.ts's
+        // buildLayout), not something a CSS structural selector could work
+        // out on its own — nth-child doesn't line up once rowspans start
+        // removing cells from later rows.
         (cell) =>
-          `<td class="recipe-cell recipe-cell-${cell.kind}" rowspan="${cell.rowSpan}" colspan="${cell.colSpan}">${esc(cell.text)}</td>`,
+          `<td class="recipe-cell recipe-cell-${cell.kind}" style="--col:${cell.col}" rowspan="${cell.rowSpan}" colspan="${cell.colSpan}">${esc(cell.text)}</td>`,
       )
       .join('');
     rows.push(`<tr>${tds}</tr>`);

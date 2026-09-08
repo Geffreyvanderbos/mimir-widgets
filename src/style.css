@@ -944,10 +944,30 @@ body {
   overflow-wrap: anywhere;
 }
 
-.recipe-cell-ingredient,
 .recipe-prep-label,
 .recipe-prep-text {
   background: var(--bg-raised);
+}
+
+/*
+ * A faint left-to-right gradient — darker per column in light mode, lighter
+ * in dark mode — so the table reads as a left-to-right progression at a
+ * glance, the way the merge tree itself does. `--col` (set inline per cell
+ * in recipe-render.ts) is the cell's real column, not its position among
+ * siblings, which is the only way to get this right once rowspans mean a
+ * `<tr>`'s cells and its column indices aren't the same sequence. Capped at
+ * 30% so a deep merge chain doesn't run all the way to black/white.
+ */
+.recipe-cell-ingredient,
+.recipe-cell-action {
+  background: color-mix(in srgb, var(--bg-raised), black min(calc(var(--col, 0) * 3%), 30%));
+}
+
+@media (prefers-color-scheme: dark) {
+  .recipe-cell-ingredient,
+  .recipe-cell-action {
+    background: color-mix(in srgb, var(--bg-raised), white min(calc(var(--col, 0) * 3%), 30%));
+  }
 }
 
 .recipe-cell-ingredient {
@@ -965,7 +985,7 @@ body {
   min-width: 0;
   font-family: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace;
   font-size: 0.7rem;
-  color: var(--ink-faint);
+  color: var(--ink-muted);
   white-space: nowrap;
 }
 
