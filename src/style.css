@@ -927,11 +927,19 @@ body {
   text-align: center;
 }
 
+/* iOS Safari's font-boosting heuristic inflates text size per block based on
+   estimated column width, and a merge-tree table is exactly its worst case —
+   every cell is a different width via rowspan/colspan, so each one gets
+   boosted by a different amount and the table reads as growing font size
+   row by row, column by column. text-size-adjust: 100% opts the whole table
+   out of that heuristic instead of fighting it cell by cell. */
 .recipe-table {
   width: 100%;
   min-width: max-content;
   border-collapse: collapse;
   font-size: 0.85rem;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
 }
 
 .recipe-cell {
