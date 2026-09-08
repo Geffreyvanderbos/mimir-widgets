@@ -26,6 +26,8 @@ interface Extracted {
 
 const URL_LENGTH_WARNING = 1600;
 
+const llmDetailsEl = document.getElementById('recipe-llm-details') as HTMLDetailsElement;
+const llmSummaryTextEl = document.getElementById('recipe-llm-summary-text')!;
 const urlEl = document.getElementById('recipe-llm-url') as HTMLInputElement;
 const modelEl = document.getElementById('recipe-llm-model') as HTMLInputElement;
 const keyEl = document.getElementById('recipe-llm-key') as HTMLInputElement;
@@ -52,14 +54,37 @@ function setStatus(el: HTMLElement, text: string, isError: boolean): void {
   el.classList.toggle('is-error', isError);
 }
 
+// "host" rather than the full base URL — a bare host is what's recognisable
+// at a glance, and the full address (with any path) is still right there
+// once someone opens the details to check or change it.
+function summaryText(baseUrl: string, model: string): string {
+  if (baseUrl === '') return 'Set up your LLM endpoint';
+  let host = baseUrl;
+  try {
+    host = new URL(baseUrl).host || baseUrl;
+  } catch {
+    // Not a parseable URL yet (mid-typing) — show it raw rather than blank.
+  }
+  return model === '' ? host : `${model} · ${host}`;
+}
+
+function updateSummary(): void {
+  llmSummaryTextEl.textContent = summaryText(urlEl.value.trim(), modelEl.value.trim());
+}
+
 function saveConfig(): void {
   saveLlmConfig({ baseUrl: urlEl.value, apiKey: keyEl.value, model: modelEl.value });
+  updateSummary();
 }
 {
   const config = loadLlmConfig();
   urlEl.value = config.baseUrl;
   modelEl.value = config.model;
   keyEl.value = config.apiKey;
+  updateSummary();
+  // Open only when there's nothing to summarize yet — a configured endpoint
+  // is exactly the "set once, forget about it" case, so it starts collapsed.
+  llmDetailsEl.open = config.baseUrl.trim() === '';
 }
 for (const el of [urlEl, modelEl, keyEl]) el.addEventListener('input', saveConfig);
 
@@ -202,7 +227,7 @@ const FILLER_PHASES = [
   'Laying the steps out into columns…',
   'Shortening each step down to a phrase…',
   'Checking that everything converges…',
-  'Still working — some models take a while here…',
+  'Still working. Some models take a while here…',
 ];
 // Slow enough that the line reads as steady progress rather than a nervous
 // tic — a phrase change every few breaths, not every glance.
@@ -251,7 +276,9 @@ function startProgress(
 async function generateFromExtracted(source: Extracted): Promise<void> {
   const config = loadLlmConfig();
   if (config.baseUrl.trim() === '') {
-    setStatus(statusEl, 'Set up an LLM endpoint in step 1 first.', true);
+    llmDetailsEl.open = true;
+    urlEl.focus();
+    setStatus(statusEl, 'Set up your LLM endpoint above first.', true);
     return;
   }
 

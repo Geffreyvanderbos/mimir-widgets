@@ -23,6 +23,25 @@ function err(status: number, message: string): Response {
   return new Response(JSON.stringify({ error: message }), { status, headers: JSON_HEADERS });
 }
 
+// "That page returned 403" names the number but not what it means — and
+// 401/403 specifically is worth spelling out, since it's the single most
+// common reason this fails: plenty of recipe sites block anything that
+// doesn't look like a real browser, which a Workers fetch doesn't (a
+// realistic User-Agent, set below, still isn't enough for some of them).
+function describeUpstreamStatus(status: number): string {
+  switch (status) {
+    case 401:
+    case 403:
+      return `blocked this request (${status}) — it's likely detecting and rejecting automated fetches`;
+    case 404:
+      return 'returned "not found" (404) — double-check the link';
+    case 429:
+      return 'is rate-limiting requests (429) — try again in a bit';
+    default:
+      return status >= 500 ? `is having server problems (${status})` : `returned an unexpected response (${status})`;
+  }
+}
+
 // Defense in depth, not a complete SSRF barrier — Cloudflare's edge network
 // already can't reach most private address space, but a hostname literal
 // costs nothing to reject up front. Redirects are left to fetch()'s default
@@ -219,7 +238,7 @@ export const onRequest: PagesFunction = async (context) => {
   }
 
   if (!upstream.ok) {
-    return err(502, `That page returned ${upstream.status}.`);
+    return err(502, `That page ${describeUpstreamStatus(upstream.status)}.`);
   }
   const contentType = upstream.headers.get('content-type') ?? 'text/html';
   if (!contentType.includes('html') || upstream.body === null) {
