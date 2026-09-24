@@ -1,400 +1,444 @@
-# Building a Mimir-friendly oEmbed widget
+---
+name: mimir-widget
+description: Build a small web widget that renders as a live, interactive card when its URL is pasted into Mimir (the outliner/notes app), by making it an oEmbed provider. Use when someone wants to make an embeddable widget, card, or mini-app for Mimir, make their own URL "unfurl" or embed in a Mimir note, write an oEmbed endpoint or discovery link for Mimir, or debug why their page shows as a plain link or a blank frame inside Mimir. Covers the discovery contract, iframe sizing, theming, persistent state, hosting headers, a complete Cloudflare Pages template, and curl checks.
+---
 
-This is a spec for building a small web page that embeds cleanly into
-Mimir — an outliner that turns a bare `https://` URL pasted into a block
-into a live rich embed, the same way it handles a YouTube or Spotify link,
-via [oEmbed](https://oembed.com/). Hand this
-document to an LLM along with what you want the widget to do (e.g. "a
-countdown timer" or "a mini poll"), and it should be able to produce a
-widget that embeds well on the first try. `countdown/` and `pomodoro/` in
-this repo are reference implementations of everything below.
+# Building a Mimir widget
 
-## 1. Serve valid oEmbed JSON
+Mimir turns a bare `https://` URL pasted into a block into a live embed via
+[oEmbed](https://oembed.com/), the same way it handles YouTube or Spotify. A
+**widget** is a small web page of your own (a countdown, a timer, a poll, a
+map) plus an oEmbed endpoint that tells Mimir to show that page in a fixed-
+height iframe. The page's query string is its whole configuration:
+`https://widgets.example/countdown?date=2026-12-25&label=Christmas` is one
+card, and a different query string is a different card.
 
-At some https endpoint, given a `?url=<the widget page's URL>` query
-parameter, return oEmbed JSON:
+You need three things, and all of them are served by *your* host:
+
+1. **The widget page**, served at a public https URL.
+2. **A discovery `<link>`** in that page's raw HTML, pointing at your oEmbed
+   endpoint with the page's own full URL as `?url=`.
+3. **The oEmbed endpoint**, returning JSON whose `html` is a single `<iframe>`
+   back at the page.
+
+## Workflow
+
+1. Pin down what the widget shows and which query parameters configure it.
+   Every parameter needs a sensible default, so a bare URL still renders
+   something useful.
+2. Decide the card's height (§4). If the height depends on a parameter, write
+   the formula and a clamp for it now.
+3. Build the page: plain HTML/CSS/JS reading `URLSearchParams`, following
+   §5–§8. A framework is almost never worth it at this size.
+4. Add the discovery `<link>` injection and the oEmbed endpoint (§1–§3). The
+   [template](#template-cloudflare-pages) below does both.
+5. Make sure the host doesn't send `X-Frame-Options` or a restrictive
+   `frame-ancestors` on widget routes ([troubleshooting](#faq--troubleshooting)).
+6. Run the [curl checks](#verify-with-curl) against the deployed URL, then paste
+   the URL into a Mimir note to look at the result.
+
+## The rules
+
+### §1. Serve oEmbed JSON (and only JSON)
+
+At an https endpoint, given `?url=<the widget page's full URL>`, return:
 
 ```json
 {
   "version": "1.0",
   "type": "rich",
-  "provider_name": "Your Widget Site",
-  "title": "A short description",
-  "html": "<iframe src=\"...\" width=\"100%\" height=\"140\" frameborder=\"0\"></iframe>",
+  "provider_name": "Your Widgets",
+  "title": "Countdown: Christmas",
+  "html": "<iframe src=\"https://widgets.example/countdown?date=2026-12-25&amp;label=Christmas\" width=\"100%\" height=\"140\" frameborder=\"0\"></iframe>",
   "width": 600,
   "height": 140
 }
 ```
 
-`type` should be `"rich"` (or `"video"` for an actual video). **JSON only —
-Mimir never reads XML oEmbed**, so don't bother supporting `&format=xml`.
+- `type` is `"rich"` for a widget (`"video"` only for actual video; see
+  [photo](#optional-embedding-a-picture-instead-of-a-card) for images).
+- Mimir never reads XML oEmbed. Ignore `format=xml`.
+- **Only describe your own pages.** Reject any `?url=` whose origin isn't
+  yours, or your endpoint becomes a way to make Mimir iframe anything.
+- **Escape the `src` attribute** (`&` → `&amp;`, `"` → `&quot;`). The URL
+  carries user-chosen query values, and an unescaped quote breaks out of the
+  attribute.
 
-## 2. Advertise the endpoint from the widget page itself
+### §2. Put the discovery `<link>` in the raw HTML, per request
 
-Mimir discovers this by fetching the widget page's HTML and scanning it for:
+Mimir finds your endpoint by fetching the page and scanning its `<head>` for:
 
 ```html
 <link rel="alternate" type="application/json+oembed"
-      href="https://your-site.example/api/oembed?url=<the current page's own URL, url-encoded>&format=json">
+      href="https://widgets.example/api/oembed?url=<this page's full URL, URL-encoded>&format=json">
 ```
 
-**This has to be in the raw HTML response — Mimir's discovery streams the
-page over the network and never executes JavaScript.** If your widget is a
-client-rendered SPA, you cannot inject this tag from your own JS; it must
-come from your server/edge (a template, SSR, or — as in this repo — a
-Cloudflare Pages `_middleware.ts` using `HTMLRewriter` to inject it per
-request, since each page instance's URL, and therefore its correct `href`,
-differs by query string). See `functions/_middleware.ts` in this repo for
-a working example.
+Two requirements, and both trip people up:
 
-## 3. Prefer a single bare `<iframe>`, no `<script>`, in your `html`
+- **It must be in the HTTP response body.** Mimir streams the raw HTML and
+  never runs JavaScript. A tag your client-side JS adds after load does not
+  exist as far as Mimir is concerned.
+- **Its `href` must encode the exact URL requested, query string included.**
+  A static HTML file with a hard-coded `<link>` is wrong for every
+  configuration except one. Generate the tag per request with SSR, a template,
+  or an edge rewrite (the template below uses Cloudflare's `HTMLRewriter`).
 
-Mimir's backend inspects your oEmbed response's `html` field. If it is
-**exactly one `<iframe>` tag and contains no `<script>` tag**, and that
-iframe's `src` is a public https URL, Mimir loads your widget as a real
-cross-origin iframe pointed straight at your `src` — full JS, full storage,
-full functionality, sandboxed only with `allow-scripts allow-same-origin
-allow-popups` (safe because your frame is genuinely cross-origin from
-Mimir's own document).
+### §3. Make `html` exactly one `<iframe>` and no `<script>`
 
-If your `html` is anything else (inline `<script>`, multiple elements,
-blockquote-style embed markup), Mimir instead injects it via `srcdoc` into
-an *opaque-origin* sandboxed frame: `allow-scripts` only, no
-`allow-same-origin`, no persistent storage, no cookies. Your widget will
-still render, but degraded — so for anything beyond the simplest static
-markup, make your `html` a plain iframe pointing at your own real page.
+When the `html` is **exactly one `<iframe>` tag with no `<script>`** and its
+`src` is a public https URL, Mimir loads that URL as a real cross-origin
+iframe. It gets full JS, its own persistent storage, and the sandbox
+`allow-scripts allow-same-origin allow-popups`.
 
-## 4. Sizing
+Anything else (inline scripts, several elements, blockquote-style embed
+markup) gets injected via `srcdoc` into an opaque-origin frame instead:
+`allow-scripts` only, with no storage and no cookies. It still renders, but
+degraded. Point the iframe at your real page and put all the behaviour there.
 
-Mimir reads dimensions in this priority order:
+### §4. Sizing: fluid width, one fixed height
 
-1. **Fluid width + fixed pixel height on the `<iframe>` tag itself**
-   (`width="100%" height="140"`) → treated as authoritative: "any column
-   width, exactly this tall." Use this for a fixed-layout card widget —
-   this is what both widgets in this repo do, and what Spotify's own oEmbed
-   response does.
-2. **Literal pixel `width` and `height` on both the iframe tag and the
-   top-level oEmbed fields** → treated as a fixed aspect ratio to preserve
-   at any column width. Use this for something video-shaped.
-3. If neither, Mimir falls back to guessing — don't rely on this; always
-   supply real dimensions.
+Mimir reads dimensions in this order:
 
-There's no way to have your widget's own JS resize the frame on the
-direct-iframe path (Mimir doesn't listen for `postMessage` there — that
-autosize channel only exists for the `srcdoc` fallback, and you don't
-control when you land there). Pick a height your widget actually needs and
-report it; don't design a widget whose height varies over its lifetime.
+1. **`width="100%"` plus a pixel `height` on the `<iframe>` tag** means any
+   column width at exactly this height. Use this for widgets. It is also what
+   Spotify's oEmbed does. Mirror the height in the top-level `height` field,
+   and put any nominal number (such as `600`) in `width`.
+2. **Pixel `width` and `height` on both the tag and the top-level fields**
+   means keep this aspect ratio. Use it for something video-shaped.
+3. Neither: Mimir guesses. Don't rely on it.
 
-## 5. Theming: use `prefers-color-scheme`, there's no other channel
+**The frame can't resize after load.** Mimir doesn't listen for `postMessage`
+resize requests on the direct-iframe path. Pick the height your card needs and
+design so it never changes over the widget's lifetime:
 
-Mimir has no way to tell your iframe which theme it's currently in — no
-query parameter, no `postMessage`. It purely follows the OS-level
-`prefers-color-scheme`, with no independent in-app light/dark toggle of its
-own. So your widget's own `@media (prefers-color-scheme: dark)` will
-always match what Mimir is actually rendering — implement that, and you're
-correctly themed with zero coordination needed. See `src/style.css` in
-this repo for a full light/dark token set matching Mimir's own colors.
+- Content whose size varies (search results, a list that loads) goes in a
+  **fixed-height region that scrolls internally**, so the card doesn't grow.
+- Selecting or expanding something must not change the card's total height.
+  Use overlays, accordions with one item open, or ellipsis.
+- A two-pane layout must not stack at narrow widths, since stacking needs a
+  taller frame than the one you reported. Let the panes narrow instead.
+- The height is fixed before anyone's column width is known, so leave slack
+  for text that wraps at narrow widths.
 
-## 6. Visual tokens — and don't draw your own card chrome
+**The height may depend on a parameter** (e.g. `?n=5` rows means a taller
+card). It is still one fixed height per URL, computed in the oEmbed endpoint.
+If you do this:
 
-Not required, but recommended so an embedded widget doesn't look like a
-foreign object dropped into someone's notes:
+- Clamp the parameter to the same range in the endpoint and in the page, or
+  the two drift apart and the card clips.
+- Parse with `Math.round(Number(value)) || fallback`. `Number(null)` is `0`,
+  not `NaN`, so an `isFinite` check treats a missing parameter as an explicit
+  zero.
+
+### §5. Theme with `prefers-color-scheme` (there's no other channel)
+
+Mimir has no in-app theme toggle and passes no theme to the iframe: no query
+parameter and no `postMessage`. It follows the OS setting, so your own
+`@media (prefers-color-scheme: dark)` always matches what surrounds the card.
+Implement both schemes. A light-only widget glares in a dark note.
+
+### §6. Look native: no card chrome, and fill the frame
+
+**Don't draw your own outer border, border-radius, shadow or card
+background.** Mimir already wraps the iframe in a rounded, hairline-bordered
+panel, and a second one inside it reads as a rectangle within a rectangle.
+The iframe's edge is the card's edge. Use internal padding only.
+
+**Fill the reported height.** Content that sits at the top with empty
+background below it looks like a card floating in a taller box. Make
+`html, body` full height and flex-centre the content:
+
+```css
+html, body { margin: 0; height: 100%; }
+body { display: flex; justify-content: center;
+       align-items: center; align-items: safe center; }
+```
+
+Use `safe center`, not plain `center`. If the content is ever taller than the
+frame, plain centring overflows at *both* ends, and the part above the top
+can't be scrolled to. `safe` falls back to top-aligned so only the bottom
+overflows. The plain `center` line before it covers engines without `safe`. If your height is an estimate (it depends on how much text wraps),
+go further: give the content `align-self: stretch` and let it scroll.
+
+Recommended tokens, so the card sits naturally in Mimir:
 
 | Token | Light | Dark |
 |---|---|---|
-| Font | `-apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif`, `16px`/`1.6` line-height | same |
-| Accent | `#006fdc` | `#409cff` |
+| Font | `-apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif`, 16px / 1.6 | same |
 | Background | `#fdfdfe` | `#1a1a1c` |
-| Ink (text) | `#1B1B1B` | `#dcdcde` (deliberately capped below pure white — see note below) |
+| Ink | `#1b1b1b` | `#dcdcde` |
+| Muted ink | `#5d5d5f` | `#98989d` |
+| Accent | `#006fdc` | `#409cff` |
+| Hairline | `hsla(0,0%,0%,.12)` | `hsla(0,0%,100%,.11)` |
 
-Dark-mode text intentionally stops short of pure white — Mimir caps it
-around 87% (per NN/g's dark-mode-halation research and Material Design's
-dark-theme guidance) rather than using `#fff`, which reads as harsh/glowing
-on a dark background. Worth carrying over if your widget shows body text.
+Dark ink deliberately stops short of pure white, which glows harshly on a
+dark background.
 
-**Do not give your widget its own outer border, border-radius, drop shadow,
-or card background.** Mimir's `.embed-panel` already draws a rounded,
-hairline-bordered container around your iframe — adding a second one inside
-produces a visibly nested "rectangle within a rectangle" look (confirmed by
-actually embedding a first draft of these widgets: see the FAQ below). Treat
-the iframe's edge as the card's edge; your page should render flush to it,
-with only internal text padding, not an outer bordered box.
+### §7. State: the URL is the config, storage is for progress
 
-**Fill the frame exactly — don't let content sit top-aligned with slack
-space below it.** Since you're reporting a fixed height (§4), your page's
-actual rendered content should occupy that full height, not float at the
-top with empty background underneath. The simplest way: make `body` a flex
-container (`display: flex; align-items: center; justify-content: center;`
-on `html, body { height: 100% }`) so your content is vertically centered
-and the whole frame reads as one intentional shape, not a card floating in
-a taller empty box. See `src/style.css` and `src/countdown.ts`/`pomodoro.ts`
-in this repo — plain `.widget-content` divs, no card wrapper.
+**The iframe is destroyed and rebuilt every time the note is opened.**
+In-memory state (a running `setInterval`, a variable) is gone each time. On
+the direct-iframe path (§3) you do get real `localStorage` and cookies for
+your origin, so a timer can store its end time and resume on load.
 
-## 7. Persistent state: localStorage/cookies work, but namespace and expire them yourself
+- **Namespace keys by the query string**, e.g.
+  `` `pomodoro:${location.search}` ``. Storage is per origin, so two
+  differently configured embeds would otherwise share a key.
+- **Expire your own entries.** There's no uninstall step, and a config that
+  is no longer embedded never loads again to clean up after itself. Store a
+  timestamp with each entry, and on every load sweep *all* keys under your
+  prefix, deleting any past a TTL (a countdown past its date, a timer idle
+  for 30 days).
+- **In-widget controls override parameters in memory only.** A "search here"
+  button or a text field may change what's shown, but never write back to the
+  address bar, history or storage. The URL has to keep describing what a
+  reload, or another reader of the same note, will see.
+- **Everything in the URL is public to readers of the note.** It also reaches
+  your oEmbed endpoint as `?url=`. A per-user API key as a parameter is only
+  acceptable if it's free, revocable and can't spend money or read private
+  data. Anything more sensitive belongs server-side.
 
-On the direct-iframe path (§3), Mimir grants `allow-same-origin`, so your
-widget gets real, persistent `localStorage`/cookies scoped to your own
-origin — the same as if someone had visited it in a browser tab. This
-survives navigating away from the Mimir page and back, even though the
-iframe itself is destroyed and recreated on every visit (so any *in-memory*
-JS state — a running `setInterval`, a variable — is gone each time). A
-Pomodoro-style widget can resume exactly where it left off by reading its
-remaining time from storage on load instead of always starting fresh.
+### §8. Etiquette: you're running inside someone's notes
 
-Two things to get right if you do this:
+- https only. Mimir won't accept an http target.
+- No sound unless the person pressed something in the widget first. Browsers
+  block audio without a gesture anyway, and a note that beeps on open is
+  hostile.
+- No popups, no `window.open` without a click, and no analytics or tracking.
+  The reader pasted a URL into a note; they never visited your site.
+- Avoid third-party requests (web fonts, CDNs, direct tile servers). They
+  slow the load, and each one tells a third party that someone opened this
+  note. If a third-party API sees location or other personal data, proxy it
+  through your own server.
+- Clipboard writes can be refused in a cross-origin frame. Fall back to
+  `document.execCommand('copy')`, then to selecting the text.
 
-**Namespace by more than origin.** `localStorage` is scoped per *origin*,
-not per query string. Two instances of the same widget with different
-config (`?work=25&rest=5` vs `?work=50&rest=10`) will collide on the same
-storage keys unless you namespace explicitly — key off the URL's own
-`search` string (or an explicit `?id=` the person embedding it sets), not
-just a fixed key name.
+## Template (Cloudflare Pages)
 
-**Expire your own entries — nothing else will.** There's no install/
-uninstall step for a widget and no server to run a cleanup job; a person
-can create an unbounded number of distinctly-configured embeds (a new
-countdown date, a new labeled timer) over time, each leaving its own
-storage key behind forever if nothing prunes it. Store a timestamp
-alongside your state and, on every load, sweep your own namespace: delete
-any key under your prefix whose timestamp is older than some TTL you pick
-(a countdown past its target date, or a Pomodoro untouched for 30+ days,
-are both reasonable "this is stale" signals) — not just check the current
-instance's own key, since a config that's no longer embedded anywhere will
-never load again to prune itself.
-
-## 8. Etiquette, since your widget runs inside someone's sandboxed notes app
-
-- https-only. Mimir refuses to even validate an http target.
-- No autoplaying audio, no unsolicited `window.open`/popups, no
-  analytics/tracking scripts — the person embedding you didn't navigate to
-  your site, they pasted a URL into a note.
-- No external font/CDN requests if avoidable — keeps load fast and sidesteps
-  CSP/sandboxing surprises.
-
-## 9. Reference implementations
-
-- `countdown/index.html` + `src/countdown.ts` — reads `?date=` and
-  `?label=`, ticks a live countdown client-side. Fixed 140px height.
-- `pomodoro/index.html` + `src/pomodoro.ts` — reads `?work=` and `?rest=`
-  (minutes), a start/pause timer cycling work/rest. Fixed 280px height.
-  Persists its running state to namespaced `localStorage` (§7) so it
-  resumes at the correct remaining time — fast-forwarding through any
-  work/rest cycles that elapsed — after the iframe is destroyed and
-  recreated by navigating away and back. Chimes on each phase change (one
-  tone into rest, two back into work) via a synthesized Web Audio tone —
-  no audio file, and only ever triggered by a live phase transition after
-  the person has clicked Start themselves, never on load.
-- `timer/index.html` + `src/timer.ts` — reads `?presets=` (a comma-separated
-  list of durations; bare numbers are minutes, with `45s`, `1:30`,
-  `1:30:00`, `2h` and compound units like `1h09m` also parsing),
-  offering them as Apple Watch-style circular buttons alongside a free-text
-  field for an ad-hoc duration. Counts down on a depleting SVG ring and
-  rings a synthesized bell — three struck partials, no audio file — at zero.
-  Fixed 280px height. The `h`/`m`/`s` keys under that field are the phone fix
-  and generalise to any widget with a mostly-numeric text input: `inputmode`
-  is a promise about the *keyboard*, and a numeric pad has no letters on it,
-  so a grammar like `1h09m` is unreachable on a phone however well it parses.
-  The keys cancel the pointer's default rather than acting on focus, since
-  moving focus to a button is what closes the keypad mid-entry. Persists the
-  running timer to namespaced
-  `localStorage` (§7) so it resumes at the correct remaining time after the
-  iframe is destroyed and recreated; a timer that expired while away lands
-  on the finished screen silently, since there was no user gesture that load
-  to unlock audio on (§8).
-- `weather/index.html` + `src/weather.ts` — reads `?lat=`, `?lon=`, and
-  `?label=`, fetches the coming hours' forecast (temperature, precipitation
-  chance, weather-code icon) at 3-hour steps client-side from the
-  [Open-Meteo](https://open-meteo.com/) API (no key required), showing as
-  many columns as comfortably fit the embed's actual width. Fixed 180px
-  height.
-- `color/index.html` + `src/color.ts` — reads `?c=`, a colour in any CSS
-  syntax, and shows it in nine others, each row a click away from the
-  clipboard. Fixed 320px height; the rows are a `repeat(auto-fit, minmax(…))`
-  grid that folds to two columns when the embed is wide enough, and the swatch
-  above them takes whatever height that leaves, so the card fills its frame at
-  any width without measuring anything (§6). `src/color-space.ts` is the
-  conversion maths — CSS Color 4 matrices written out rather than pulled from
-  a library, since a colour library is far larger than the widget. Its
-  canonical form is deliberately *unclamped* sRGB: `oklch(0.9 0.4 150)` is a
-  valid input that no hex can represent, so clamping on the way in would make
-  the widget echo back a colour the reader never typed. Nothing is clipped
-  until an sRGB-bound string is serialised, and those rows are marked when it
-  happens. The swatch is the one surface here that isn't `--bg`, so its ink is
-  chosen from the colour's own WCAG relative luminance instead of the token
-  set, and a conic-gradient checkerboard sits under it so an alpha below 1
-  reads as transparency.
-- `fx/index.html` + `src/fx.ts` — reads `?from=`, `?to=` and `?amount=`, and
-  converts one currency into another over a 30-day sparkline, from the
-  [Frankfurter](https://frankfurter.dev/) API — no key, and it answers with
-  `access-control-allow-origin: *`, so it's fetched client-side like the
-  weather widget rather than proxied. Fixed 180px height. One request serves
-  the whole card: the range endpoint's last point *is* the current rate, and
-  both interactions — editing the amount, and the swap button, which inverts
-  every point — are arithmetic on the series already in hand, so nothing after
-  load touches the network. The sparkline is an SVG with
-  `preserveAspectRatio="none"` and `vector-effect="non-scaling-stroke"`, which
-  fills the embed's real width without a resize listener and without a stroke
-  that stretches with it.
-- `dummy/index.html` + `src/dummy.ts` — reads `?blocks=` and `?depth=`,
-  generates a dash-prefixed outline (two spaces per indent level) from a
-  bundled public-domain corpus, with a copy button. Fixed 300px height; the
-  output scrolls internally rather than growing the page, since the reported
-  height can't vary with the block count (§4). Its clipboard write falls
-  back to `document.execCommand('copy')`, then to just selecting the text,
-  since a consumer's `Permissions-Policy` may withhold `clipboard-write`
-  from a cross-origin frame.
-- `hike/index.html` + `src/hike.ts` — reads `?t=`, a whole recorded GPX track
-  compressed into the URL itself, and draws it over a basemap. Fixed 320px
-  height. `src/hike-codec.ts` does the compression (Douglas-Peucker
-  simplification → delta → zigzag varint → base64url; a 31 km hike recorded at
-  1 Hz lands in ~520 characters) and `src/hike-map.ts` the static slippy-map
-  render — Web Mercator projection, best-fit zoom, absolutely-positioned tiles,
-  track as SVG, no map library. Distance, climb and duration ride along as
-  three short scalar params (`?km=`, `?g=`, `?d=`) measured from the
-  full-resolution track, rather than as per-point elevation and time channels
-  that would roughly double the payload. `gpx/index.html` + `src/gpx.ts` is the
-  builder that turns a `.gpx` file into such a URL entirely in the browser —
-  deliberately *not* in `WIDGET_PATHS`, since it's a normal page on the site
-  rather than an embed.
-- `holidays/index.html` + `src/holidays.ts` — reads `?country=`, `?county=`,
-  `?n=` and `?en=`, and counts down to a country's next public holiday over a
-  list of the ones after it, from the [Nager.Date](https://date.nager.at/) API
-  (no key, `access-control-allow-origin: *`). Height is a function of `?n=`,
-  like the train widget. Two details worth stealing: the rows are
-  `display: contents` inside a single grid, so the date column lines up down
-  the card without pinning it to a width a long date would overflow — which
-  in turn means every row must emit every cell, even the empty ones. And the
-  day count is a difference between two *UTC* midnights derived from local
-  calendar dates, which is whole days across a daylight-saving change where
-  subtracting local midnights isn't.
-- `train/index.html` + `src/train.ts` — reads `?from=`, `?to=`, `?key=`, `?at=`,
-  `?arrive=` and `?n=`, and renders a live Dutch Railways departure board for
-  one route from the [NS Reisinformatie](https://apiportal.ns.nl/) API,
-  refreshed every minute. Two things here are worth copying. First, it is the
-  one widget whose card grows with a parameter, so its `height` in
-  `functions/api/oembed.ts` is a *function* of the target URL rather than a
-  constant — still a fixed height per URL, which is all §4 requires, just not
-  the same fixed height for every URL. Second, the API needs a per-user key,
-  and it rides in the query string like any other parameter: a key kept
-  server-side would make the widget the *host's* departure board on the host's
-  quota, rather than an empty frame anyone can point at their own commute. That
-  trade only works because an NS key is free, revocable and reads nothing
-  personal — the key is visible to everyone who can see the note, and to the
-  oEmbed endpoint, so a credential that can spend money or read private data
-  belongs behind a Function instead (§5). Times are rendered in Dutch local
-  time whatever zone the reader is in, by slicing the wall clock straight out
-  of the API's own offset-stamped timestamps rather than converting them.
-- `nearby/index.html` + `src/nearby.ts` + `src/nearby-map.ts` — reads `?lat=`,
-  `?lon=`, `?radius=`, `?amenities=`, `?zoom=` and `?label=`, and shows a
-  pannable, zoomable map beside an accordion of what OpenStreetMap has nearby,
-  from Overpass — one category open at a time, so the panel fits the frame
-  whatever the radius turns up. The one to read if your widget is *interactive*
-  rather than a card. Six things generalise. **An in-widget control may override
-  a parameter, but only in memory.** "Look around here" re-queries at the map's
-  current centre and never touches the address bar, so the URL keeps describing
-  what a reload — or another reader of the same note — will get. **Let the
-  server own the icons.**
-  Category emoji and labels come back in the response rather than living in a
-  client table, because three parts of this card draw a category and a duplicated
-  icon eventually disagrees with itself. **A two-pane widget must never restack.**
-  A media query that turned side-by-side into stacked would need a taller frame
-  than the single height §4 lets you report, and that height is fixed before
-  anyone's column width is known — so the panes narrow instead, and the list
-  column gives ground. **Selection must not change the card's height**: the
-  metadata strip is an overlay on the map, capped at two ellipsized lines, for
-  exactly that reason. **`touch-action: none` on anything you drag**, or a touch
-  drag scrolls the page your iframe is embedded in instead. And **take pointer
-  capture only once the gesture is definitely a drag** — capturing on
-  `pointerdown` retargets the compatibility `click` to the capturing element,
-  which silently kills every clickable child (here, the markers). Its data comes
-  through a Function rather than straight from the browser even though Overpass
-  allows CORS, for the same privacy reason the tile proxy exists plus one more:
-  a fallback chain across public instances only works server-side, since a
-  refused preflight isn't a failure the page can retry past.
-- `very/index.html` + `src/very.ts` + `src/very-lookup.ts` + `src/very-words.ts`
-  (page, matching, word list) — reads `?w=`, an
-  adjective, and answers with the word that doesn't need a "very" in front of
-  it: one promoted recommendation plus its runners-up, each a click from the
-  clipboard. Fixed 250px height, and the one to read for **a lookup widget
-  whose answer varies in size**. The results region is a fixed-height scrolling
-  track, so a single synonym and a six-row "did you mean" occupy identical
-  space and the reported height never has to follow the query (§4) — the
-  alternative, a card that grows with its answer, has no way to tell the
-  consumer it grew. Two smaller generalisations. With no `?w=` at all it deals
-  a random entry on each load — a bare input reads as a broken embed rather
-  than an invitation (§6), and since the frame is rebuilt on every visit (§7)
-  that paramless embed becomes a word-a-load to learn rather than a fixed card.
-  Deliberate, and the one case where a URL isn't a full description of what's
-  shown: a URL carrying no word never promised a particular one. It's also the
-  case that forces a distinction worth keeping — an entry can be fine to look
-  up yet wrong to volunteer unasked, so entries can be marked out of the random
-  rotation without being hidden from lookup. And a `?w=` URL still renders
-  exactly what it says: the field and the shuffle button override the parameter
-  in memory only, never writing back to the address bar.
-- `functions/i/[[path]].ts` + `functions/api/upload.ts` + `upload/index.html` —
-  a private image host, and **the one thing here that is not an iframe widget at
-  all**. Read it if what you want to embed is a *picture* rather than a card.
-  oEmbed's `photo` type carries no `html` — just a `url` and the true
-  `width`/`height` — and a consumer with no markup to mount builds the `<img>`
-  itself, at the ratio those dimensions describe. So §4's "pick a fixed height
-  and report it" doesn't apply; the dimensions are the sizing channel, which
-  makes them mandatory rather than decorative. Omitting `html` is what selects
-  that path, so don't add one. An image whose dimensions aren't known is served
-  as a 404 rather than as a photo response missing them, since a consumer that
-  can't read a shape has to guess one. Two URLs per key, split by extension:
-  `/i/<key>` is an HTML page carrying the discovery `<link>` (§2 discovery
-  fetches pages, not images), `/i/<key>.jpg` is the bytes, for an `<img src>` or
-  a chat app that unfurls image URLs natively. Also the only route here behind a
-  secret: bearer token compared in constant time, failing closed when unset,
-  with the uploaded file's magic bytes checked against its claimed content-type
-  (that type is client-supplied, so it is a claim, not a fact) and SVG excluded
-  as a scriptable document rather than an image.
-- `functions/api/tiles/[z]/[x]/[y].ts` — same-origin basemap tile proxy for the
-  hike and nearby widgets, so those embeds make no third-party requests at all.
-- `functions/api/nearby.ts` — the Overpass query/fallback endpoint, which also
-  normalises and balances the result set.
-- `functions/api/oembed.ts` — the oEmbed JSON endpoint all widgets share.
-- `functions/_middleware.ts` — the discovery-`<link>` injection.
-
-## FAQ / gotchas
-
-**My widget loads fine in a browser tab but shows a blank frame in Mimir,
-with a console error like `Refused to display '...' in a frame because it
-set 'X-Frame-Options' to 'SAMEORIGIN'`.** If you're on Cloudflare Pages:
-Pages sets `X-Frame-Options: SAMEORIGIN` on every response by default,
-which blocks exactly the cross-origin framing an embeddable widget needs.
-Remove it on your widget routes with a `_headers` file in your build
-output (or `public/`, if using Vite):
+A complete single-widget site. The same shape works on any host that can
+rewrite HTML per request (Express, Next.js, Deno, a PHP template): what
+matters is the rules above, not the platform.
 
 ```
-/your-widget-path
+public/_headers
+functions/_middleware.ts      # injects the discovery <link>
+functions/api/oembed.ts       # the oEmbed endpoint
+countdown/index.html          # the widget page (served at /countdown)
+```
+
+**`functions/_middleware.ts`**:
+
+```ts
+const WIDGET_PATHS = ['/countdown'];
+
+export const onRequest: PagesFunction = async ({ request, next }) => {
+  const url = new URL(request.url);
+  if (!WIDGET_PATHS.includes(url.pathname.replace(/\/$/, ''))) return next();
+
+  const response = await next();
+  if (!(response.headers.get('content-type') ?? '').includes('text/html')) return response;
+
+  const oembed = new URL('/api/oembed', url.origin);
+  oembed.searchParams.set('url', url.toString());
+  oembed.searchParams.set('format', 'json');
+
+  return new HTMLRewriter()
+    .on('head', {
+      element(el) {
+        el.append(
+          `<link rel="alternate" type="application/json+oembed" href="${oembed.toString()}" title="Countdown">`,
+          { html: true },
+        );
+      },
+    })
+    .transform(response);
+};
+```
+
+**`functions/api/oembed.ts`**:
+
+```ts
+interface Widget {
+  height: number | ((target: URL) => number);
+  title: (target: URL) => string;
+}
+
+const WIDGETS: Record<string, Widget> = {
+  '/countdown': {
+    height: 140,
+    title: (t) => `Countdown: ${t.searchParams.get('label') ?? 'Countdown'}`,
+  },
+};
+
+const escapeAttr = (s: string) => s.replace(/&/g, '&amp;').replace(/"/g, '&quot;');
+
+export const onRequest: PagesFunction = async ({ request }) => {
+  const self = new URL(request.url);
+  let target: URL;
+  try {
+    target = new URL(self.searchParams.get('url') ?? '');
+  } catch {
+    return new Response('Missing or invalid url', { status: 400 });
+  }
+  if (target.origin !== self.origin) return new Response('url must be same-origin', { status: 400 });
+
+  const widget = WIDGETS[target.pathname.replace(/\/$/, '')];
+  if (!widget) return new Response('Unknown widget', { status: 404 });
+
+  const height = typeof widget.height === 'function' ? widget.height(target) : widget.height;
+  return Response.json(
+    {
+      version: '1.0',
+      type: 'rich',
+      provider_name: 'Your Widgets',
+      provider_url: self.origin,
+      title: widget.title(target),
+      html: `<iframe src="${escapeAttr(target.toString())}" width="100%" height="${height}" frameborder="0"></iframe>`,
+      width: 600,
+      height,
+    },
+    { headers: { 'cache-control': 'public, max-age=3600' } },
+  );
+};
+```
+
+**`public/_headers`** (Pages adds `X-Frame-Options: SAMEORIGIN` by default,
+which blocks the embed; remove it on widget routes only):
+
+```
+/countdown
   ! X-Frame-Options
-/your-widget-path/*
+/countdown/*
   ! X-Frame-Options
 ```
 
-Leave it in place on any page you don't intend to be embedded (a landing
-page, for instance) — the default is a reasonable one, it's just wrong for
-the specific routes a consumer is meant to iframe. See `public/_headers`
-in this repo for the working example. Other static hosts have an
-equivalent per-path header override; the fix is the same regardless of
-host — a widget page must not send a restrictive `X-Frame-Options` (or a
-`Content-Security-Policy: frame-ancestors` that excludes the consumer).
+**`countdown/index.html`**:
 
-**I removed it from Pages and it's still blocked.** If your widget domain
-sits on a Cloudflare zone (not just a `*.pages.dev` subdomain), check
-**Rules → Transform Rules → Managed Transforms** for a bundled toggle like
-"Add security headers" — it's a separate, zone-wide feature from anything
-Pages itself sends, and it also injects `X-Frame-Options: SAMEORIGIN` (plus
-`X-Content-Type-Options`, `Referrer-Policy`, etc.), with no per-host
-exception on that settings page. Fix it with a **Response Header**
-Transform Rule (not a Request Header one — those look similar in the UI but
-only touch what Cloudflare sends to your origin, not what it sends back to
-the browser, and won't do anything here): match `http.host eq
-"your-widget-host"`, action **Remove** → `X-Frame-Options`. A regular
-Transform Rule can strip a header a Managed Transform already added.
+```html
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Countdown</title>
+  <style>
+    :root { --bg:#fdfdfe; --ink:#1b1b1b; --muted:#5d5d5f; --accent:#006fdc; --hairline:hsla(0,0%,0%,.12); }
+    @media (prefers-color-scheme: dark) {
+      :root { --bg:#1a1a1c; --ink:#dcdcde; --muted:#98989d; --accent:#409cff; --hairline:hsla(0,0%,100%,.11); }
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; height: 100%; }
+    body {
+      font: 16px/1.6 -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      color: var(--ink); background: var(--bg);
+      display: flex; justify-content: center;
+      align-items: center; align-items: safe center;
+    }
+    .content { width: 100%; padding: 0 1.25rem; }
+    .label { font-size: .85rem; color: var(--muted); margin: 0 0 .85rem; padding-bottom: .85rem; border-bottom: 1px solid var(--hairline); }
+    .clock { font-size: 2rem; font-variant-numeric: tabular-nums; color: var(--accent); }
+  </style>
+</head>
+<body>
+  <div class="content">
+    <p class="label" id="label"></p>
+    <div class="clock" id="clock" aria-live="polite"></div>
+  </div>
+  <script type="module">
+    const params = new URLSearchParams(location.search);
+    const target = new Date(params.get('date') ?? `${new Date().getFullYear() + 1}-01-01`);
+    document.getElementById('label').textContent = params.get('label') ?? 'Countdown';
+    const clock = document.getElementById('clock');
+    const tick = () => {
+      const s = Math.max(0, Math.floor((target - Date.now()) / 1000));
+      clock.textContent = `${Math.floor(s / 86400)}d ${Math.floor(s / 3600) % 24}h ${Math.floor(s / 60) % 60}m ${s % 60}s`;
+    };
+    tick();
+    setInterval(tick, 1000);
+  </script>
+</body>
+</html>
+```
 
-**My widget shows a visibly nested rectangle-in-a-rectangle, with extra
-blank space below the card.** You gave your widget its own border/
-border-radius/card background, doubling up on Mimir's `.embed-panel`
-chrome, and/or your content doesn't fill the full declared height. See §6.
+To add a widget, add its path to `WIDGET_PATHS`, give it an entry in `WIDGETS`,
+add it to `_headers`, and create its page. Test locally with
+`npx wrangler pages dev <build-output-dir>`. Plain `vite dev` or a static file
+server does *not* run Functions, so the `<link>` and endpoint won't exist there.
+
+## Optional: embedding a picture instead of a card
+
+If the URL represents an image, return oEmbed `type: "photo"` instead:
+
+```json
+{ "version": "1.0", "type": "photo", "provider_name": "Your Images",
+  "url": "https://img.example/i/abc123.jpg", "width": 1600, "height": 900 }
+```
+
+- **Leave out `html` entirely.** Its absence is what makes Mimir build the
+  `<img>` itself. Adding one routes the response back onto the iframe path.
+- **`width` and `height` are mandatory** and must be the image's real pixel
+  size. Mimir sizes the panel from that ratio. If you don't know them, return a
+  404 rather than a photo without them.
+- Discovery still fetches a *page*: serve an HTML page with the `<link>` (e.g.
+  `/i/abc123`) separately from the image bytes (`/i/abc123.jpg`).
+
+## Verify with curl
+
+`curl` doesn't run JavaScript, so it sees exactly what Mimir's discovery sees.
+Run these against the deployed URL (or `wrangler pages dev`):
+
+```bash
+PAGE='https://widgets.example/countdown?date=2026-12-25&label=Christmas'
+
+# 1. The discovery link is in the raw HTML, and its url= is this exact page, query included
+curl -s "$PAGE" | grep -o '<link[^>]*json+oembed[^>]*>'
+
+# 2. The endpoint returns JSON whose html is one <iframe> with a pixel height
+curl -s "https://widgets.example/api/oembed?url=$(python3 -c 'import sys,urllib.parse;print(urllib.parse.quote(sys.argv[1],safe=""))' "$PAGE")&format=json"
+
+# 3. Nothing forbids framing (this should print nothing)
+curl -sI "$PAGE" | grep -iE 'x-frame-options|frame-ancestors'
+```
+
+Then paste `$PAGE` into a Mimir block and check it in both light and dark mode,
+at a narrow and a wide column.
+
+## FAQ / troubleshooting
+
+**The URL stays a plain link.** Discovery failed. Run check 1: the `<link>` is
+missing from the raw HTML (usually because JS injected it), or it points at an
+endpoint that errors. Also check that the target is https.
+
+**A blank frame, with a console error like `Refused to display '…' in a frame
+because it set 'X-Frame-Options' to 'SAMEORIGIN'`.** The widget page must not
+send `X-Frame-Options`, or a `Content-Security-Policy: frame-ancestors` that
+excludes Mimir. Remove them on widget routes only, and keep them on pages that
+aren't meant to be embedded. On Cloudflare Pages, which adds the header by
+default, use the `_headers` removal shown in the template. Other hosts have an
+equivalent per-path header override.
+
+**I removed it in `_headers` and it's still there.** If the domain is on a
+Cloudflare zone (not just `*.pages.dev`), check **Rules → Transform Rules →
+Managed Transforms** for "Add security headers". It's zone-wide, separate from
+Pages, and also adds `X-Frame-Options: SAMEORIGIN`. Remove it with a
+**Response Header** Transform Rule matching your widget host, action *Remove*
+`X-Frame-Options`. A *Request* Header rule looks similar but does nothing here.
+
+**It renders, but storage doesn't persist and some features break.** Your
+`html` isn't a single bare iframe, so Mimir fell back to the sandboxed `srcdoc`
+path (§3).
+
+**A rectangle inside a rectangle, or blank space under the card.** You drew
+your own border, radius or background, or the content doesn't fill the
+reported height (§6).
+
+**The top and bottom of the card are both cut off.** The content is taller
+than the reported height and `body` centres it. Raise the height, or use
+`align-items: safe center` / `align-self: stretch` (§6).
+
+**It's the wrong theme.** Mimir follows the OS theme only. Implement
+`prefers-color-scheme: dark` (§5).
+
+Working examples of all of the above (timers, maps, a departure board, an
+image host) are at
+[github.com/Geffreyvanderbos/mimir-widgets](https://github.com/Geffreyvanderbos/mimir-widgets).

@@ -7,9 +7,10 @@ URL) built to embed cleanly
 into Mimir — paste a bare widget URL into a block and it renders as a live
 card instead of a plain link.
 
-See [`SKILL.md`](./SKILL.md) for the spec on building your own
-Mimir-friendly widget (hand it to an LLM), and `CLAUDE.md` for how this
-repo itself is put together.
+[`SKILL.md`](./SKILL.md) is a self-contained agent skill for building your
+own Mimir widget: install it in your coding agent (or just hand it the file)
+and ask for the widget you want. `CLAUDE.md` covers how this repo itself is
+put together.
 
 ## Development
 
